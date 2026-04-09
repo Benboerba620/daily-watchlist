@@ -1,0 +1,32 @@
+# API keys (never commit)
+config/.env
+config/daily-watchlist.env
+
+# Generated reports (user content)
+reports/
+daily-watchlist-reports/
+
+# Python
+__pycache__/
+scripts/__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Test artifacts
+fresh-e2e/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Codex temp
+.codex-prompt-*.md

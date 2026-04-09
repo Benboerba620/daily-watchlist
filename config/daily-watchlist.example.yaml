@@ -1,0 +1,37 @@
+# Daily Watchlist configuration
+# Copy this file to daily-watchlist.yaml and customize it for your workflow.
+
+market: us  # us / cn / hk / mixed
+
+modules:
+  macro: true
+  earnings: true
+  focus_areas: true
+  wiki: auto
+
+reporting:
+  model_profile: default   # default / domestic
+  secondary_verify: false  # set true if using a domestic model
+  theme_min_score: 3
+  theme_min_hits: 2
+
+thresholds:
+  large_cap_move: 3
+  small_cap_move: 7
+
+focus_areas:
+  - name: "AI & Data Center"
+    keywords: ["AI", "data center", "GPU", "inference"]
+    # required_any: search results must contain at least one of these to be included
+    required_any: ["data center", "GPU", "inference"]
+    # exclude: search results with these words in title/summary are discarded
+    exclude: ["airline", "ceasefire", "military"]
+  - name: "Clean Energy"
+    keywords: ["solar", "wind", "nuclear", "grid"]
+    required_any: ["solar", "wind", "nuclear", "grid"]
+    exclude: ["airline", "ceasefire", "military"]
+  # Add your own:
+  # - name: "Shipping"
+  #   keywords: ["tanker", "VLCC", "dry bulk"]
+  #   required_any: ["tanker", "VLCC", "dry bulk"]
+  #   exclude: []
