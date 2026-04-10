@@ -1,8 +1,12 @@
 # Daily Watchlist
 
+[![Release](https://img.shields.io/github/v/release/Benboerba620/daily-watchlist?sort=semver)](https://github.com/Benboerba620/daily-watchlist/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 > AI stock watchlist, portfolio monitoring, earnings tracking, and daily market report workflow for Claude Code.  
 > 面向 Claude Code 的 AI 股票池监控、异动跟踪、财报日历与每日研究日报工作流。
 
+[Latest Release](https://github.com/Benboerba620/daily-watchlist/releases/tag/v1.0.0) | [All Releases](https://github.com/Benboerba620/daily-watchlist/releases) | [Changelog](./CHANGELOG.md)
 [中文](#中文) | [English](#english)
 
 # 中文
@@ -10,6 +14,7 @@
 > AI 驱动的每日股票池监控系统，也是一个给 Claude Code 用的投资研究工作流。维护一个股票池，每天说一句 `/dw-today`，Claude Code 自动拉取行情、检测异动、搜索新闻，生成结构化日报。
 >
 > **状态**：MVP v1.0.0。你负责维护股票池和关注方向；Claude 负责拉数据、搜新闻、写日报。
+> **版本**：[v1.0.0 Release](https://github.com/Benboerba620/daily-watchlist/releases/tag/v1.0.0) | [更新日志](./CHANGELOG.md)
 
 **关键词**：AI 股票池、股票监控、投资研究工作流、每日复盘、异动监控、财报日历、portfolio monitoring、stock watchlist、earnings tracker、Claude Code
 
@@ -327,6 +332,7 @@ MIT
 > An AI-powered daily stock monitoring system and investing workflow for Claude Code. Maintain a watchlist, say `/dw-today`, and Claude Code automatically fetches prices, detects movers, searches for news, and generates a structured daily report.
 >
 > **Status**: MVP v1.0.0. You maintain the watchlist and focus areas; Claude handles data, news, and reports.
+> **Release**: [v1.0.0](https://github.com/Benboerba620/daily-watchlist/releases/tag/v1.0.0) | [Changelog](./CHANGELOG.md)
 
 **Keywords**: AI stock watchlist, portfolio monitoring, stock mover detection, earnings tracker, daily stock report, investing workflow, Claude Code, watchlist automation
 
