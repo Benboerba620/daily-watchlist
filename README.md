@@ -9,7 +9,7 @@
 
 > AI 驱动的每日股票池监控系统，也是一个给 Claude Code 用的投资研究工作流。维护一个股票池，每天说一句 `/dw-today`，Claude Code 自动拉取行情、检测异动、搜索新闻，生成结构化日报。
 >
-> **状态**：MVP v1.0。你负责维护股票池和关注方向；Claude 负责拉数据、搜新闻、写日报。
+> **状态**：MVP v1.0.0。你负责维护股票池和关注方向；Claude 负责拉数据、搜新闻、写日报。
 
 **关键词**：AI 股票池、股票监控、投资研究工作流、每日复盘、异动监控、财报日历、portfolio monitoring、stock watchlist、earnings tracker、Claude Code
 
@@ -326,7 +326,7 @@ MIT
 
 > An AI-powered daily stock monitoring system and investing workflow for Claude Code. Maintain a watchlist, say `/dw-today`, and Claude Code automatically fetches prices, detects movers, searches for news, and generates a structured daily report.
 >
-> **Status**: MVP v1.0. You maintain the watchlist and focus areas; Claude handles data, news, and reports.
+> **Status**: MVP v1.0.0. You maintain the watchlist and focus areas; Claude handles data, news, and reports.
 
 **Keywords**: AI stock watchlist, portfolio monitoring, stock mover detection, earnings tracker, daily stock report, investing workflow, Claude Code, watchlist automation
 
