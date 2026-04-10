@@ -1,82 +1,241 @@
-# Daily Watchlist
+[中文](#中文) | [English](#english)
 
-## 中文
+# 中文
 
-Daily Watchlist 是一个给 Claude 使用的轻量市场监控协议包，包含：
+> AI 驱动的每日股票池监控系统。维护一个股票池，每天说一句 `/dw-today`，Claude Code 自动拉取行情、检测异动、搜索新闻，生成结构化日报。
+>
+> **状态**：MVP v1.0。你负责维护股票池和关注方向；Claude 负责拉数据、搜新闻、写日报。
 
-- 行情、异动、财报、宏观数据脚本
-- 日报和导入 watchlist 的 Claude skills
-- 可编辑的日报模板
-- 可以并入现有工作区的协议文件
+**直接按你的情况选一条路：**
 
-### 推荐安装方式
+| 你是谁 | 走哪条路 |
+|---|---|
+| 🪟 **Windows 用户 + 编程小白** | [一键安装（PowerShell）](#-windows-小白一键安装推荐) |
+| 🍎 **macOS / Linux 用户 + 编程小白** | [一键安装（bash）](#-macos--linux-小白一键安装) |
+| 🧑‍💻 **会用 Git / 命令行** | [手动安装](#手动安装) |
+| 🤖 **想让 AI agent 帮你装** | 把 [`INSTALL-FOR-AI.md`](./INSTALL-FOR-AI.md) 的链接发给 Claude Code，说"帮我装这个" |
 
-优先安装到独立子目录，例如 `./daily-watchlist/`。
+---
 
-这样可以尽量避免和已有项目中的这些内容冲突：
+## 这是什么？
 
-- `.claude/skills/`
-- `CLAUDE.md`
-- `config/`
-- `reports/`
+一个在 Claude Code 中运行的每日股票监控工具。你维护一个股票池，每天说一句 `/dw-today`，它就会：
 
-### 默认生成的文件
+1. 拉取你股票池里所有股票的最新行情
+2. 检测异动（大盘股 ±3%，小盘股 ±7%，阈值可配）
+3. 对异动股搜索新闻，分析原因
+4. 检查本周财报日历
+5. 按你关注的投资方向搜索行业新闻
+6. 生成一份结构化的 markdown 日报
+7. （可选）自动归档到 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
 
-安装器默认生成这些 namespaced 文件：
+```
+watchlist.md ──→ fetch_market_data.py ──→ JSON ──┐
+                                                  │
+config.yaml ───→ fetch_macro_data.py ───→ JSON ──┤
+                                                  ├──→ Claude ──→ 日报 .md
+                 FMP earnings calendar ──→ JSON ──┤
+                                                  │
+focus_areas ───→ Claude WebSearch ────────────────┘
+                                                  │
+                                         wiki/ ←──┘ (归档)
+```
 
-- `config/daily-watchlist.env`
-- `config/daily-watchlist.yaml`
-- `config/daily-watchlist-watchlist.md`
-- `templates/daily-watchlist-report-template.md`
-- `_daily-watchlist-protocols.md`
-- `.claude/skills/daily-watchlist-today.md`
-- `.claude/skills/daily-watchlist-import.md`
-- `daily-watchlist-reports/`
+---
 
-Python 脚本仍兼容旧文件名：
+## 开始之前
 
-- `config/.env`
-- `config/config.yaml`
-- `config/watchlist.md`
+你需要准备一个 **FMP API Key**（免费）：
 
-但默认优先使用 namespaced 文件。
+1. 前往 [financialmodelingprep.com](https://site.financialmodelingprep.com/register) 注册
+2. 在 Dashboard 复制你的 API Key
+3. 免费层每天 250 次请求，个人使用完全够
 
-### CLI 安装
+如果你关注 **A 股或港股**，还需要一个 Tushare token（可选）：
+- 前往 [tushare.pro](https://tushare.pro/register) 注册，获取 token
+
+---
+
+## 🪟 Windows 小白：一键安装（推荐）
+
+如果你 **第一次接触这类项目** + **不会 Git / 命令行**，按这 5 步来。
+
+**开始前你只需要知道**：
+- 你**不需要**懂编程
+- 你**不需要**会 Markdown
+- 你的工作是"维护股票池 + 每天说 `/dw-today`"
+- 推荐环境：**Windows + Claude Code**
+
+### 1. 安装前置工具
+
+- **Python**：前往 [python.org](https://www.python.org/downloads/) 下载安装（勾选 "Add to PATH"）
+- **Claude Code**：前往 [claude.ai/claude-code](https://claude.ai/claude-code) 安装
+- **Git**（可选）：有就用 git clone，没有就下载 ZIP
+
+### 2. 下载这个项目
+
+二选一：
+- 会用 git：打开终端，运行 `git clone https://github.com/Benboerba620/daily-watchlist.git`
+- 不会用 git：在 GitHub 页面点 **Code → Download ZIP**，解压
+
+### 3. 一键安装到你的项目目录
+
+打开 PowerShell（Windows 搜索栏搜"PowerShell"），运行：
+
+```powershell
+cd 你下载解压的路径\daily-watchlist
+.\\scripts\\install.ps1 -TargetDir "D:\my-investment"
+```
+
+这一条命令会自动帮你：
+- 复制脚本、模板、Claude skills 到目标目录
+- 创建配置文件（你只需要填 API key）
+- 创建日报输出目录
+- 设置 `CLAUDE.md`（已有文件时只追加轻量入口）
+
+如果你还没有自己的项目目录，把 `-TargetDir` 指到一个全新的空文件夹即可。
+
+### 4. 填入你的 API Key
+
+```powershell
+Copy-Item "D:\my-investment\config\daily-watchlist.env.example" "D:\my-investment\config\daily-watchlist.env"
+notepad "D:\my-investment\config\daily-watchlist.env"
+```
+
+在打开的记事本里，把 `your_fmp_api_key_here` 替换成你在第 0 步拿到的 FMP API Key，保存。
+
+### 5. 打开 Claude Code，导入你的股票池
+
+在 Claude Code 中说：
+
+> /dw-import
+
+然后粘贴你的股票列表（逗号分隔就行，200 只以内都没问题）：
+
+> AAPL, MSFT, GOOGL, NVDA, TSLA, AMZN, JPM, XOM, UNH, JNJ
+
+Claude 会自动查询每只股票的信息，按行业分类，让你确认后保存。
+
+然后说：
+
+> /dw-today
+
+你的第一份日报就生成了。
+
+### 小白常见问题
+
+- **不懂 Git，能用吗？** 可以，下载 ZIP 解压也行。
+- **免费够用吗？** FMP 免费层 250 次/天，监控 100 只股票 + 宏观数据绰绰有余。
+- **只关注 A 股？** 需要额外注册 Tushare（免费），在 `.env` 里填入 `TUSHARE_TOKEN`。
+- **只想先试试，不想污染现有项目？** 把 `-TargetDir` 指到一个全新的空文件夹。
+- **日报在哪？** `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md`。
+- **怎么修改关注方向？** 编辑 `config/daily-watchlist.yaml` 里的 `focus_areas`。
+
+---
+
+## 🍎 macOS / Linux 小白：一键安装
+
+和 Windows 版完全等价的 bash 版本。
+
+### 1. 下载
 
 ```bash
-# macOS / Linux
 git clone https://github.com/Benboerba620/daily-watchlist.git
 cd daily-watchlist
-bash scripts/install.sh --target-dir ../my-project/daily-watchlist
+```
+
+不会用 git：从 GitHub 页面 **Code → Download ZIP**，解压，`cd` 进去。
+
+### 2. 一键安装
+
+```bash
+bash scripts/install.sh --target-dir ~/my-investment
+```
+
+### 3. 填入 API Key
+
+```bash
+cp ~/my-investment/config/daily-watchlist.env.example ~/my-investment/config/daily-watchlist.env
+nano ~/my-investment/config/daily-watchlist.env
+```
+
+### 4. 打开 Claude Code
+
+先说 `/dw-import`，粘贴你的股票列表。然后说 `/dw-today` 生成第一份日报。
+
+---
+
+## 手动安装
+
+适合已经会用 git / 命令行的人。
+
+```bash
+git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
+
+# macOS / Linux
+bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 
 # Windows PowerShell
-git clone https://github.com/Benboerba620/daily-watchlist.git
-cd daily-watchlist
-.\scripts\install.ps1 -TargetDir ..\my-project\daily-watchlist
+.\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
 ```
 
 安装后：
+1. `cp config/daily-watchlist.env.example config/daily-watchlist.env` 并填入 key
+2. 按需编辑 `config/daily-watchlist.yaml`（模块开关、异动阈值、关注方向）
+3. `python scripts/check_setup.py` 验证环境
+4. 在 Claude Code 中说 `/dw-import` 导入股票池，说 `/dw-today` 生成日报
 
-1. 复制 `config/daily-watchlist.env.example` 为 `config/daily-watchlist.env`
-2. 填入 API key
-3. 检查 `config/daily-watchlist.yaml`
-4. 检查 `config/daily-watchlist-watchlist.md`
-5. 如有需要，编辑 `templates/daily-watchlist-report-template.md`
-6. 运行 `python scripts/check_setup.py`
-7. 运行 `python scripts/generate_daily_report.py`
+---
 
-### 主题新闻筛选
+## 让 AI agent 帮你装
 
-如果你觉得主题新闻噪音太大，可以在 `config/daily-watchlist.yaml` 里调这些字段：
+打开 Claude Code（或 Cursor / Cline 等），发这条消息：
 
-- `reporting.model_profile`
-- `reporting.secondary_verify`
-- `reporting.theme_min_score`
-- `reporting.theme_min_hits`
-- 每个 `focus_area` 下的 `required_any`
-- 每个 `focus_area` 下的 `exclude`
+> 帮我装这个：https://github.com/Benboerba620/daily-watchlist/blob/main/INSTALL-FOR-AI.md
 
-如果你使用国产模型，建议设置：
+Agent 会按安装协议走完全流程：确认市场、填入 key、导入股票池、生成配置、交付。
+
+---
+
+## 功能详情
+
+### 股票池管理
+
+说 `/dw-import`，粘贴 ticker 列表（支持 200+），Claude 自动：
+- 查询公司名、市值、行业
+- 按行业分类
+- 让你确认后保存到 `config/daily-watchlist-watchlist.md`
+
+### 每日简报
+
+说 `/dw-today`，Claude 自动：
+- 拉取全部股票行情 + 宏观指标（VIX / SPY / QQQ / 黄金 / 原油 / BTC）
+- 检测异动，搜索新闻分析原因
+- 检查本周财报日历
+- 按关注方向搜索行业新闻
+- 生成结构化日报到 `daily-watchlist-reports/YYYY-MM/`
+
+### 关注方向（Focus Areas）
+
+在 `config/daily-watchlist.yaml` 中定义你关注的投资主题：
+
+```yaml
+focus_areas:
+  - name: "AI & Data Center"
+    keywords: ["AI", "data center", "GPU", "inference"]
+    required_any: ["data center", "GPU", "inference"]
+    exclude: ["airline", "ceasefire"]
+```
+
+Claude 每天按关键词搜索行业新闻，并用 `required_any` 过滤无关结果、用 `exclude` 剔除噪音。
+
+### Wiki 归档
+
+如果你的项目已经安装了 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)，Daily Watchlist 会自动检测 `wiki/entities/`，将重大异动和财报事件归档到对应 entity 的 `news.md`。
+
+### 国产模型二次验证
+
+如果你使用国产模型（如 DeepSeek、Kimi 等），建议在 `config/daily-watchlist.yaml` 中开启：
 
 ```yaml
 reporting:
@@ -84,72 +243,239 @@ reporting:
   secondary_verify: true
 ```
 
-这样 Claude Code 在写日报时应启用更严格的二次验证机制，减少新闻误判和幻觉风险。
+开启后，Claude 在写入日报前会对每条新闻做二次验证：核对来源可信度、发布时间、正文事实一致性。未通过验证的条目标记为"待人工确认"而不是直接写入。
 
-建议的流程是：
+---
 
-1. 第一轮 WebSearch 召回候选新闻
-2. 第二轮核对来源、发布时间、正文事实和关键数字
-3. 未通过二次验证的条目不要直接写入日报
+## 配置参考
+
+| 文件 | 用途 |
+|------|------|
+| `config/daily-watchlist.env` | API keys |
+| `config/daily-watchlist.yaml` | 模块开关、阈值、关注方向 |
+| `config/daily-watchlist-watchlist.md` | 你的股票池 |
+| `templates/daily-watchlist-report-template.md` | 日报模板（可自行编辑） |
 
 ### 触发词
 
-推荐：
-
-- `/dw-today`
-- `/dw-import`
-
-兼容别名：
-
-- `/watchlist-today`
-- `/watchlist-import`
-- `/today`
-- `/import`
+| 推荐 | 兼容别名 |
+|------|----------|
+| `/dw-today` | `/watchlist-today`、`/today` |
+| `/dw-import` | `/watchlist-import`、`/import` |
 
 只有在当前工作区没有冲突时，才建议使用短别名。
 
-### 与现有工作区融合
+### 必需的 API Key
 
-如果你已经有自己的 `CLAUDE.md` 和 `.claude/skills/`，建议把 Daily Watchlist 保持在子目录中，只在根 `CLAUDE.md` 里加入一个轻量入口。
+| 服务 | 用途 | 费用 |
+|------|------|------|
+| [FMP](https://site.financialmodelingprep.com/register) | 美/欧/日股行情 + 财报（必需） | 免费（250 次/天） |
+| [Tushare](https://tushare.pro/register) | A 股 / 港股行情（可选） | 免费 |
 
-具体流程见 [INSTALL-FOR-AI.md](/D:/BaiduSyncdisk/Claude/daily-watchlist/INSTALL-FOR-AI.md)。
+---
 
-### 必需的 key
+## 致谢
 
-- `FMP_API_KEY`：必需
-- `TUSHARE_TOKEN`：可选
+- [Claude Code](https://claude.ai/claude-code) — 运行环境
+- [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) — 知识归档系统
 
-## English
+## 关于作者
 
-Daily Watchlist is a lightweight protocol pack for Claude-based market monitoring.
+更多投资思考、研究方法与系统化协作的文章，欢迎关注微信公众号 **奔波儿r**。
 
-It includes:
+## 协议
 
-- scripts for quotes, movers, earnings, and macro data
-- Claude skills for daily briefing and watchlist import
-- an editable report template
-- a protocol file that can be merged into an existing workspace
+MIT
 
-Recommended install model:
+---
 
-- install into a dedicated subdirectory such as `./daily-watchlist/`
+# English
 
-Recommended triggers:
+> An AI-powered daily stock monitoring system. Maintain a watchlist, say `/dw-today`, and Claude Code automatically fetches prices, detects movers, searches for news, and generates a structured daily report.
+>
+> **Status**: MVP v1.0. You maintain the watchlist and focus areas; Claude handles data, news, and reports.
 
-- `/dw-today`
-- `/dw-import`
+**Pick the path that matches you:**
 
-Compatibility aliases:
+| Who you are | Where to go |
+|---|---|
+| 🪟 **Windows + coding beginner** | [One-shot install (PowerShell)](#-windows-beginner-one-shot-install-recommended) |
+| 🍎 **macOS / Linux + coding beginner** | [One-shot install (bash)](#-macos--linux-beginner-one-shot-install) |
+| 🧑‍💻 **Comfortable with git / CLI** | [Manual install](#manual-install) |
+| 🤖 **Want an AI agent to install it** | Send [`INSTALL-FOR-AI.md`](./INSTALL-FOR-AI.md) to Claude Code and say "install this for me" |
 
-- `/watchlist-today`
-- `/watchlist-import`
-- `/today`
-- `/import`
+---
 
-Required keys:
+## What is this?
 
-- `FMP_API_KEY` required
-- `TUSHARE_TOKEN` optional
+A daily stock monitoring tool that runs inside Claude Code. Maintain a watchlist, say `/dw-today`, and it will:
+
+1. Fetch latest prices for all stocks in your watchlist
+2. Detect significant movers (large-cap ±3%, small-cap ±7%, configurable)
+3. Search news for movers and analyze causes
+4. Check this week's earnings calendar
+5. Search industry news based on your focus areas
+6. Generate a structured markdown report
+7. (Optional) Auto-archive to [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
+
+---
+
+## Before You Start
+
+You need a **FMP API Key** (free):
+
+1. Go to [financialmodelingprep.com](https://site.financialmodelingprep.com/register) and register
+2. Copy your API Key from the Dashboard
+3. Free tier: 250 requests/day, more than enough for personal use
+
+For **A-shares or HK stocks**, also get a Tushare token (optional):
+- Register at [tushare.pro](https://tushare.pro/register)
+
+---
+
+## 🪟 Windows beginner: one-shot install (recommended)
+
+If you're **new to projects like this** + **don't know git / CLI**, follow these 5 steps.
+
+**Before you start, you only need to know**:
+- You **don't** need to know programming
+- You **don't** need to know Markdown
+- Your job is: "maintain a stock list + say `/dw-today` every day"
+- Recommended: **Windows + Claude Code**
+
+### 1. Install prerequisites
+
+- **Python**: download from [python.org](https://www.python.org/downloads/) (check "Add to PATH")
+- **Claude Code**: install from [claude.ai/claude-code](https://claude.ai/claude-code)
+- **Git** (optional): if you have it, use `git clone`; otherwise download ZIP
+
+### 2. Download this project
+
+Either:
+- With git: `git clone https://github.com/Benboerba620/daily-watchlist.git`
+- Without git: on GitHub, click **Code → Download ZIP**, then unzip
+
+### 3. One-shot install
+
+Open PowerShell (search "PowerShell" in Windows), run:
+
+```powershell
+cd path\to\daily-watchlist
+.\scripts\install.ps1 -TargetDir "D:\my-investment"
+```
+
+This copies scripts, templates, Claude skills, creates config files, and sets up the report directory.
+
+### 4. Add your API Key
+
+```powershell
+Copy-Item "D:\my-investment\config\daily-watchlist.env.example" "D:\my-investment\config\daily-watchlist.env"
+notepad "D:\my-investment\config\daily-watchlist.env"
+```
+
+Replace `your_fmp_api_key_here` with your FMP API Key, save.
+
+### 5. Open Claude Code and start
+
+Say `/dw-import`, then paste your stock list:
+
+> AAPL, MSFT, GOOGL, NVDA, TSLA, AMZN, JPM, XOM, UNH, JNJ
+
+Claude auto-classifies them by sector. Confirm, then say `/dw-today` for your first report.
+
+### Beginner FAQ
+
+- **No git?** Download ZIP works fine.
+- **Is the free tier enough?** Yes. 250 req/day covers 100+ stocks + macro.
+- **Only follow A-shares?** Register Tushare (free), add `TUSHARE_TOKEN` to `.env`.
+- **Just want to try without affecting existing files?** Point `-TargetDir` at a new empty folder.
+- **Where are my reports?** `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md`
+- **How to change focus areas?** Edit `focus_areas` in `config/daily-watchlist.yaml`.
+
+---
+
+## 🍎 macOS / Linux beginner: one-shot install
+
+Behaviour-equivalent bash version.
+
+### 1. Download
+
+```bash
+git clone https://github.com/Benboerba620/daily-watchlist.git
+cd daily-watchlist
+```
+
+### 2. Install
+
+```bash
+bash scripts/install.sh --target-dir ~/my-investment
+```
+
+### 3. Add API Key
+
+```bash
+cp ~/my-investment/config/daily-watchlist.env.example ~/my-investment/config/daily-watchlist.env
+nano ~/my-investment/config/daily-watchlist.env
+```
+
+### 4. Open Claude Code
+
+Say `/dw-import`, paste your tickers. Then `/dw-today` for your first report.
+
+---
+
+## Manual install
+
+```bash
+git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
+
+# macOS / Linux
+bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
+
+# Windows PowerShell
+.\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
+```
+
+Then: set up `.env`, edit `config.yaml`, run `check_setup.py`, use `/dw-import` and `/dw-today`.
+
+---
+
+## Let an AI agent install it
+
+Open Claude Code (or Cursor / Cline) and say:
+
+> Install this for me: https://github.com/Benboerba620/daily-watchlist/blob/main/INSTALL-FOR-AI.md
+
+---
+
+## Features
+
+- **Watchlist import**: paste 200+ tickers, auto-classified by sector
+- **Mover detection**: configurable thresholds, auto news search
+- **Macro dashboard**: VIX, SPY, QQQ, gold, oil, BTC
+- **Earnings calendar**: auto-track for watched stocks
+- **Focus areas**: custom keywords for daily industry news
+- **Wiki archiving**: auto-integrates with karpathy-claude-wiki
+- **Secondary verification**: for domestic model users, news verified before inclusion
+
+## API Keys
+
+| Service | Purpose | Cost |
+|---------|---------|------|
+| [FMP](https://site.financialmodelingprep.com/register) | US/EU/JP quotes + earnings (required) | Free (250 req/day) |
+| [Tushare](https://tushare.pro/register) | A-shares / HK quotes (optional) | Free |
+
+## Triggers
+
+| Recommended | Aliases |
+|-------------|---------|
+| `/dw-today` | `/watchlist-today`, `/today` |
+| `/dw-import` | `/watchlist-import`, `/import` |
+
+## Credits
+
+- [Claude Code](https://claude.ai/claude-code)
+- [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
 
 ## License
 
