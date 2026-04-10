@@ -20,3 +20,12 @@
 - trade execution
 - GUI-only features
 - paid-only integrations as the default path
+
+## Releases
+
+- Update `VERSION`, `CHANGELOG.md`, and any user-facing docs that mention the release number
+- Commit the release on `main`
+- Create an annotated tag such as `git tag -a v1.0.1 -m "Release v1.0.1"`
+- Push `main` and the tag: `git push origin main && git push origin v1.0.1`
+- The GitHub Actions `Release` workflow validates the scripts and creates or updates the GitHub release from `CHANGELOG.md`
+- If needed, run the workflow manually with `workflow_dispatch` and provide an existing tag

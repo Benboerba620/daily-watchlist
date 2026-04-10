@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing git tag to release, for example v1.0.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install validation dependencies
+        run: python -m pip install --upgrade pip requests python-dotenv pyyaml
+
+      - name: Compile Python scripts
+        run: python -m compileall scripts
+
+      - name: Run install smoke test
+        run: bash scripts/install.sh --target-dir ./_release_smoke
+
+      - name: Assert installed workspace layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f ./_release_smoke/scripts/generate_daily_report.py
+          test -f ./_release_smoke/scripts/fetch_market_data.py
+          test -f ./_release_smoke/scripts/fetch_macro_data.py
+          test -f ./_release_smoke/scripts/check_setup.py
+          test -f ./_release_smoke/templates/daily-watchlist-report-template.md
+          test -f ./_release_smoke/config/daily-watchlist.yaml
+          test -f ./_release_smoke/config/daily-watchlist-watchlist.md
+          test -f ./_release_smoke/.claude/skills/daily-watchlist-today.md
+          test -f ./_release_smoke/.claude/skills/daily-watchlist-import.md
+
+      - name: Confirm setup check stops at missing env gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          output="$(python ./_release_smoke/scripts/check_setup.py 2>&1)"
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          if [ "$status" -eq 0 ]; then
+            echo "Expected check_setup.py to fail in smoke test without a configured env file."
+            exit 1
+          fi
+          printf '%s\n' "$output" | grep -q "daily-watchlist.env"
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Build release notes from changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${RELEASE_TAG}"
+          version="${tag#v}"
+          awk -v version="$version" '
+            $0 ~ "^## \\[" version "\\]" {capture=1; next}
+            capture && /^## \[/ {exit}
+            capture {print}
+          ' CHANGELOG.md > release-notes.md
+
+          if [ ! -s release-notes.md ]; then
+            {
+              echo "Release $tag"
+              echo
+              echo "See CHANGELOG.md for details."
+            } > release-notes.md
+          else
+            tmp_file="$(mktemp)"
+            {
+              echo "Release $tag"
+              echo
+              cat release-notes.md
+            } > "$tmp_file"
+            mv "$tmp_file" release-notes.md
+          fi
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${RELEASE_TAG}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$tag" --notes-file release-notes.md
+          else
+            gh release create "$tag" --title "$tag" --notes-file release-notes.md
+          fi
