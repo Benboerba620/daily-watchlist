@@ -31,9 +31,13 @@ copy_if_needed() {
 echo "=== Daily Watchlist 安装器 ==="
 echo "目标目录: $TARGET_DIR"
 
-if [[ -d "$TARGET_DIR" && "$FORCE" != true ]]; then
-    echo "错误: $TARGET_DIR 已存在。使用 --force 才会覆盖。"
+if [[ -e "$TARGET_DIR" && ! -d "$TARGET_DIR" ]]; then
+    echo "错误: $TARGET_DIR 已存在且不是目录。"
     exit 1
+fi
+
+if [[ -d "$TARGET_DIR" ]]; then
+    echo "目标目录已存在，将安装到现有工作区。"
 fi
 
 mkdir -p \

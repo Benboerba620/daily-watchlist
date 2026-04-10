@@ -441,6 +441,7 @@ def build_snapshot(
     tushare_token: str,
     thresholds: dict[str, float],
     max_workers: int,
+    include_earnings: bool,
 ) -> dict[str, Any]:
     watchlist_map = {item["ticker"]: item for item in watchlist}
     fmp_tickers = [
@@ -460,11 +461,15 @@ def build_snapshot(
         tushare_future = executor.submit(
             fetch_tushare_quotes, tushare_tickers, tushare_token, max_workers
         )
-        earnings_future = executor.submit(fetch_earnings_calendar, api_key, watchlist_map)
+        earnings_future = (
+            executor.submit(fetch_earnings_calendar, api_key, watchlist_map)
+            if include_earnings
+            else None
+        )
 
         fmp_quotes = quote_future.result()
         tushare_quotes = tushare_future.result()
-        earnings = earnings_future.result()
+        earnings = earnings_future.result() if earnings_future else []
 
     for raw in fmp_quotes:
         symbol = str(raw.get("symbol", "")).strip().upper()
@@ -526,6 +531,10 @@ def main() -> int:
     if not isinstance(config_thresholds, dict):
         log("Warning: config.thresholds is not a mapping, using defaults")
         config_thresholds = {}
+    config_modules = config.get("modules") or {}
+    if not isinstance(config_modules, dict):
+        log("Warning: config.modules is not a mapping, using defaults")
+        config_modules = {}
     thresholds = {
         **DEFAULT_THRESHOLDS,
         **config_thresholds,
@@ -543,6 +552,7 @@ def main() -> int:
                 tushare_token=tushare_token,
                 thresholds=thresholds,
                 max_workers=max(args.max_workers, 1),
+                include_earnings=bool(config_modules.get("earnings", True)),
             )
     except Exception as exc:  # noqa: BLE001
         log(f"Error: {exc}")

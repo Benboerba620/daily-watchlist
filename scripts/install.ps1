@@ -41,9 +41,13 @@ function Copy-IfNeeded {
 Write-Host "=== Daily Watchlist Installer ==="
 Write-Host "Target: $TargetDir"
 
-if ((Test-Path $TargetDir) -and (-not $Force)) {
-    Write-Host "ERROR: $TargetDir already exists. Use -Force to overwrite." -ForegroundColor Red
-    exit 1
+if (Test-Path $TargetDir) {
+    $existingItem = Get-Item -LiteralPath $TargetDir
+    if (-not $existingItem.PSIsContainer) {
+        Write-Host "ERROR: $TargetDir exists and is not a directory." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Target directory already exists. Installing into existing workspace."
 }
 
 $dirs = @(
