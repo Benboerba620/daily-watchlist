@@ -44,6 +44,18 @@ jobs:
       - name: Run install smoke test
         run: bash scripts/install.sh --target-dir ./_release_smoke
 
+      - name: Run offline report generation smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_path="$(python scripts/smoke_generate_report.py --workspace ./_release_smoke)"
+          test -f "$report_path"
+          if grep -q "{MARKET_OVERVIEW_TABLE}" "$report_path"; then
+            echo "Report still contains unresolved template placeholders."
+            exit 1
+          fi
+          grep -q "WebSearch" "$report_path"
+
       - name: Assert installed workspace layout
         shell: bash
         run: |
@@ -67,6 +79,22 @@ jobs:
               exit 1
             fi
           done
+
+      - name: Assert injected CLAUDE.md stays lightweight
+        shell: bash
+        run: |
+          set -euo pipefail
+          claude_file="./_release_smoke/CLAUDE.md"
+          test -f "$claude_file"
+          grep -q "/dw-today" "$claude_file"
+          grep -q "/dw-import" "$claude_file"
+          grep -q "./.claude/skills/daily-watchlist-today.md" "$claude_file"
+          if grep -q "_daily-watchlist-protocols.md" "$claude_file"; then
+            echo "Legacy protocol file reference leaked back into CLAUDE.md."
+            exit 1
+          fi
+          line_count="$(wc -l < "$claude_file")"
+          test "$line_count" -le 15
 
       - name: Assert no redundant files
         shell: bash

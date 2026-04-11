@@ -13,16 +13,21 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoDir = Split-Path -Parent $ScriptDir
 
-$ProtocolHeading = "## Daily Watchlist Protocols"
+$ProtocolHeading = "## Daily Watchlist"
+$LegacyProtocolHeading = "## Daily Watchlist Protocols"
 $ProtocolLines = @(
-    "## Daily Watchlist Protocols",
+    "## Daily Watchlist",
     "",
-    "When the user asks for the Daily Watchlist workflow (/dw-today or /dw-import; /watchlist-today and /watchlist-import are compatibility aliases; use /today and /import only when unambiguous), read these first:",
-    "- ./config/daily-watchlist.yaml",
-    "- ./templates/daily-watchlist-report-template.md",
+    "For Daily Watchlist requests, prefer /dw-today and /dw-import.",
+    "",
+    "Read these first:",
     "- ./.claude/skills/daily-watchlist-today.md",
+    "- ./.claude/skills/daily-watchlist-import.md",
+    "- ./config/daily-watchlist.yaml",
+    "- ./config/daily-watchlist-watchlist.md",
+    "- ./templates/daily-watchlist-report-template.md",
     "",
-    "Write reports to ./daily-watchlist-reports/YYYY-MM/ . Follow the saved template by default and tell the user the template can be edited at any time."
+    "Write reports to ./daily-watchlist-reports/YYYY-MM/."
 )
 $RootClaudeLines = @(
     "# Workspace Instructions",
@@ -119,7 +124,10 @@ if (-not (Test-Path $targetClaude)) {
     Set-Content -Path $targetClaude -Value ($RootClaudeLines -join "`r`n") -Encoding utf8
 } else {
     $existingClaude = Get-Content $targetClaude -Raw
-    if ($existingClaude -notmatch [regex]::Escape($ProtocolHeading)) {
+    if (
+        ($existingClaude -notmatch [regex]::Escape($ProtocolHeading)) -and
+        ($existingClaude -notmatch [regex]::Escape($LegacyProtocolHeading))
+    ) {
         $content = $existingClaude.TrimEnd()
         if ($content) {
             $content += "`r`n`r`n"
@@ -153,6 +161,7 @@ if ($setupExitCode -eq 0) {
 } else {
     Write-Host ""
     Write-Host "WARNING: Installation complete, but setup check found issues. Please fix them before use." -ForegroundColor Yellow
+    Write-Host "If the only missing item is FMP_API_KEY, that is expected on first install." -ForegroundColor Yellow
     $global:LASTEXITCODE = 0
 }
 

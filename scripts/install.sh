@@ -8,7 +8,7 @@ TARGET_DIR="./daily-watchlist"
 FORCE=false
 
 while [[ $# -gt 0 ]]; do
-    case $1 in
+    case "$1" in
         --target-dir) TARGET_DIR="$2"; shift 2 ;;
         --force) FORCE=true; shift ;;
         *) echo "Unknown option: $1"; exit 1 ;;
@@ -26,10 +26,10 @@ copy_if_needed() {
     fi
 }
 
-echo "=== Daily Watchlist 安装器 ==="
-echo "目标目录: $TARGET_DIR"
+echo "=== Daily Watchlist Installer ==="
+echo "Target directory: $TARGET_DIR"
 
-# --- 检查 Python ---
+# --- Check Python ---
 PYTHON_CMD=""
 if command -v python3 >/dev/null 2>&1; then
     PYTHON_CMD="python3"
@@ -37,34 +37,34 @@ elif command -v python >/dev/null 2>&1; then
     PYTHON_CMD="python"
 else
     echo ""
-    echo "❌ 未找到 Python。请先安装 Python >= 3.10："
-    echo "   https://www.python.org/downloads/"
+    echo "ERROR: Python not found. Please install Python >= 3.10:"
+    echo "  https://www.python.org/downloads/"
     echo ""
-    echo "安装完成后重新运行本脚本。"
+    echo "Then re-run this installer."
     exit 1
 fi
 
-PYTHON_VERSION=$($PYTHON_CMD -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-PYTHON_OK=$($PYTHON_CMD -c "import sys; print(1 if sys.version_info >= (3, 10) else 0)")
+PYTHON_VERSION="$($PYTHON_CMD -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")"
+PYTHON_OK="$($PYTHON_CMD -c "import sys; print(1 if sys.version_info >= (3, 10) else 0)")"
 if [[ "$PYTHON_OK" != "1" ]]; then
     echo ""
-    echo "❌ Python 版本太低（当前: $PYTHON_VERSION，需要: >= 3.10）"
-    echo "   https://www.python.org/downloads/"
+    echo "ERROR: Python version too old (current: $PYTHON_VERSION, required: >= 3.10)"
+    echo "  https://www.python.org/downloads/"
     exit 1
 fi
-echo "✅ Python $PYTHON_VERSION"
+echo "OK Python $PYTHON_VERSION"
 
-# --- 检查目标目录 ---
+# --- Check target directory ---
 if [[ -e "$TARGET_DIR" && ! -d "$TARGET_DIR" ]]; then
-    echo "❌ $TARGET_DIR 已存在且不是目录。"
+    echo "ERROR: $TARGET_DIR already exists and is not a directory."
     exit 1
 fi
 
 if [[ -d "$TARGET_DIR" ]]; then
-    echo "目标目录已存在，将安装到现有工作区。"
+    echo "Target directory already exists. Installing into existing workspace."
 fi
 
-# --- 创建目录结构 ---
+# --- Create directory structure ---
 mkdir -p \
     "$TARGET_DIR/config" \
     "$TARGET_DIR/scripts" \
@@ -72,7 +72,7 @@ mkdir -p \
     "$TARGET_DIR/daily-watchlist-reports" \
     "$TARGET_DIR/.claude/skills"
 
-# --- 拷贝脚本文件 ---
+# --- Copy script files ---
 cp "$REPO_DIR/scripts/generate_daily_report.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/fetch_market_data.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/fetch_macro_data.py" "$TARGET_DIR/scripts/"
@@ -82,71 +82,81 @@ cp "$REPO_DIR/templates/daily-watchlist-report-template.md" "$TARGET_DIR/templat
 cp "$REPO_DIR/skills/daily-watchlist-today.md" "$TARGET_DIR/.claude/skills/"
 cp "$REPO_DIR/skills/daily-watchlist-import.md" "$TARGET_DIR/.claude/skills/"
 
-# --- 拷贝配置文件（只拷贝工作文件，不拷贝 .example 副本） ---
+# --- Copy config files (working copies only, no .example duplicates) ---
 copy_if_needed "$REPO_DIR/config/daily-watchlist.env.example" "$TARGET_DIR/config/daily-watchlist.env"
 copy_if_needed "$REPO_DIR/config/daily-watchlist.example.yaml" "$TARGET_DIR/config/daily-watchlist.yaml"
 copy_if_needed "$REPO_DIR/config/daily-watchlist.watchlist.example.md" "$TARGET_DIR/config/daily-watchlist-watchlist.md"
 
-# --- CLAUDE.md 整合（轻量入口，不拷贝完整协议副本） ---
-PROTOCOL_HEADING="## Daily Watchlist Protocols"
+# --- CLAUDE.md integration (lightweight hint only) ---
+PROTOCOL_HEADING="## Daily Watchlist"
+LEGACY_PROTOCOL_HEADING="## Daily Watchlist Protocols"
 
 if [[ ! -f "$TARGET_DIR/CLAUDE.md" ]]; then
     cat > "$TARGET_DIR/CLAUDE.md" <<'EOF'
-# 工作区说明
+# Workspace Instructions
 
-## Daily Watchlist Protocols
+## Daily Watchlist
 
-当用户要求 Daily Watchlist 工作流（`/dw-today` 或 `/dw-import`；`/watchlist-today` 和 `/watchlist-import` 是兼容别名；只有在不冲突时才使用 `/today` 和 `/import`）时，先读取：
-- `./config/daily-watchlist.yaml`
-- `./templates/daily-watchlist-report-template.md`
+For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
+
+Read these first:
 - `./.claude/skills/daily-watchlist-today.md`
+- `./.claude/skills/daily-watchlist-import.md`
+- `./config/daily-watchlist.yaml`
+- `./config/daily-watchlist-watchlist.md`
+- `./templates/daily-watchlist-report-template.md`
 
-报告写入 `./daily-watchlist-reports/YYYY-MM/`。默认按保存的模板输出，并告诉用户模板可以随时自行编辑。
+Write reports to `./daily-watchlist-reports/YYYY-MM/`.
 EOF
-elif ! grep -Fq "$PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md"; then
+elif ! grep -Fq "$PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md" && ! grep -Fq "$LEGACY_PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md"; then
     cat >> "$TARGET_DIR/CLAUDE.md" <<'EOF'
 
-## Daily Watchlist Protocols
+## Daily Watchlist
 
-当用户要求 Daily Watchlist 工作流（`/dw-today` 或 `/dw-import`；`/watchlist-today` 和 `/watchlist-import` 是兼容别名；只有在不冲突时才使用 `/today` 和 `/import`）时，先读取：
-- `./config/daily-watchlist.yaml`
-- `./templates/daily-watchlist-report-template.md`
+For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
+
+Read these first:
 - `./.claude/skills/daily-watchlist-today.md`
+- `./.claude/skills/daily-watchlist-import.md`
+- `./config/daily-watchlist.yaml`
+- `./config/daily-watchlist-watchlist.md`
+- `./templates/daily-watchlist-report-template.md`
 
-报告写入 `./daily-watchlist-reports/YYYY-MM/`。默认按保存的模板输出，并告诉用户模板可以随时自行编辑。
+Write reports to `./daily-watchlist-reports/YYYY-MM/`.
 EOF
 fi
 
-# --- 安装 Python 依赖 ---
+# --- Install Python dependencies ---
 echo ""
-echo "正在安装 Python 依赖..."
+echo "Installing Python dependencies..."
 if $PYTHON_CMD -m pip install -r "$REPO_DIR/requirements.txt" --quiet; then
-    echo "✅ Python 依赖安装完成"
+    echo "OK Python dependencies installed"
 else
     echo ""
-    echo "⚠️  依赖安装失败。请手动运行："
-    echo "   $PYTHON_CMD -m pip install -r requirements.txt"
+    echo "WARNING: Dependency install failed. Please run manually:"
+    echo "  $PYTHON_CMD -m pip install -r requirements.txt"
     echo ""
 fi
 
-# --- 运行环境检查 ---
+# --- Run setup check ---
 echo ""
-echo "正在运行环境检查..."
+echo "Running setup check..."
 if $PYTHON_CMD "$TARGET_DIR/scripts/check_setup.py"; then
     echo ""
-    echo "✅ 安装完成！所有检查通过。"
+    echo "OK Installation complete! All checks passed."
 else
     echo ""
-    echo "⚠️  安装完成，但环境检查未通过。请按上面的提示修复后再使用。"
+    echo "WARNING: Installation complete, but setup check found issues."
+    echo "If the only missing item is FMP_API_KEY, that is expected on first install."
     echo ""
 fi
 
 echo ""
-echo "已安装到 $TARGET_DIR"
+echo "Installed to $TARGET_DIR"
 echo ""
-echo "下一步："
-echo "  1. 编辑 API key：  $TARGET_DIR/config/daily-watchlist.env"
-echo "  2. 检查配置：      $TARGET_DIR/config/daily-watchlist.yaml"
-echo "  3. 检查监控池：    $TARGET_DIR/config/daily-watchlist-watchlist.md"
-echo "  4. 编辑模板（可选）：$TARGET_DIR/templates/daily-watchlist-report-template.md"
-echo "  5. 生成日报：      在 Claude Code 中运行 /dw-today"
+echo "Next steps:"
+echo "  1. Edit API key:     $TARGET_DIR/config/daily-watchlist.env"
+echo "  2. Review config:    $TARGET_DIR/config/daily-watchlist.yaml"
+echo "  3. Review watchlist: $TARGET_DIR/config/daily-watchlist-watchlist.md"
+echo "  4. Edit template:    $TARGET_DIR/templates/daily-watchlist-report-template.md (optional)"
+echo "  5. Generate report:  Run /dw-today in Claude Code"

@@ -72,6 +72,7 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 - 如果已有 `CLAUDE.md`，在末尾追加入口段（不重复追加）
 
 入口段指向 skills 文件和配置文件，不拷贝完整协议。除非用户明确要求，否则不要把完整协议塞进根 `CLAUDE.md`。
+入口段里优先推荐 `/dw-today` 和 `/dw-import`，不要把 `/today`、`/import` 这种高冲突短别名当默认入口。
 
 ## 阶段 5：验证
 
@@ -80,6 +81,7 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 ```bash
 python {workspace}/scripts/check_setup.py
 python {workspace}/scripts/fetch_market_data.py --profile AAPL,MSFT
+python {repo}/scripts/smoke_generate_report.py --workspace {workspace}
 ```
 
 如果启用了宏观模块，再运行：

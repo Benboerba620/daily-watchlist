@@ -139,6 +139,7 @@ def main():
         sys.exit(0)
 
     print("存在未完成项。请按上面的提示修复后再运行。")
+    print(f"常见下一步：编辑 config/{ENV_FILE_CANDIDATES[0]} 填入 FMP_API_KEY，然后重新运行本检查。")
     sys.exit(1)
 
 

@@ -111,6 +111,8 @@ cd 你下载解压的路径\daily-watchlist
 .\scripts\install.ps1 -TargetDir "D:\my-investment"
 ```
 
+如果安装器最后只提示 `FMP_API_KEY` 未填写，这是正常的首次安装状态，不算安装失败。
+
 这一条命令会自动帮你：
 - 复制脚本、模板、Claude skills 到目标目录
 - 创建配置文件（你只需要填 API key）
@@ -176,6 +178,8 @@ cd daily-watchlist
 ```bash
 bash scripts/install.sh --target-dir ~/my-investment
 ```
+
+如果安装器最后只提示 `FMP_API_KEY` 未填写，这是正常的首次安装状态，不算安装失败。
 
 ### 3. 填入 API Key
 
@@ -303,8 +307,10 @@ reporting:
 
 | 推荐 | 兼容别名 |
 |------|----------|
-| `/dw-today` | `/watchlist-today`、`/today` |
-| `/dw-import` | `/watchlist-import`、`/import` |
+| `/dw-today` | `/watchlist-today`（仅兼容） |
+| `/dw-import` | `/watchlist-import`（仅兼容） |
+
+优先使用 `/dw-today` 和 `/dw-import`。在共享工作区里，不要默认依赖 `/today` 和 `/import` 这类高冲突短别名。
 
 只有在当前工作区没有冲突时，才建议使用短别名。
 
@@ -494,7 +500,7 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 .\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
 ```
 
-Then: edit `config/daily-watchlist.env` to add your API key (auto-created by installer), review `config/daily-watchlist.yaml`, run `python scripts/check_setup.py`, use `/dw-import` and `/dw-today`.
+Then: edit `config/daily-watchlist.env` to add your API key (auto-created by installer), review `config/daily-watchlist.yaml`, run `python scripts/check_setup.py`, then use `/dw-import` and `/dw-today`. Prefer the `/dw-*` commands in shared workspaces.
 
 ---
 
@@ -538,8 +544,10 @@ If you found this repo by searching for one of these terms, you're in the right 
 
 | Recommended | Aliases |
 |-------------|---------|
-| `/dw-today` | `/watchlist-today`, `/today` |
-| `/dw-import` | `/watchlist-import`, `/import` |
+| `/dw-today` | `/watchlist-today` (compatibility only) |
+| `/dw-import` | `/watchlist-import` (compatibility only) |
+
+Prefer `/dw-today` and `/dw-import`. Avoid relying on `/today` and `/import` in shared workspaces because those short aliases are more likely to conflict with other systems.
 
 ## Credits
 

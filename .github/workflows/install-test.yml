@@ -31,6 +31,19 @@ jobs:
         if: runner.os == 'Windows'
         run: .\scripts\install.ps1 -TargetDir .\test-install
 
+      - name: Run offline report generation smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_path="$(python scripts/smoke_generate_report.py --workspace ./test-install)"
+          test -f "$report_path"
+          if grep -q "{MARKET_OVERVIEW_TABLE}" "$report_path"; then
+            echo "Report still contains unresolved template placeholders."
+            exit 1
+          fi
+          grep -q "WebSearch" "$report_path"
+          echo "Smoke report generated at $report_path"
+
       - name: Verify installed file layout
         shell: bash
         run: |
@@ -55,6 +68,22 @@ jobs:
             fi
           done
           echo "All expected files present."
+
+      - name: Verify injected CLAUDE.md stays lightweight
+        shell: bash
+        run: |
+          set -euo pipefail
+          claude_file="./test-install/CLAUDE.md"
+          test -f "$claude_file"
+          grep -q "/dw-today" "$claude_file"
+          grep -q "/dw-import" "$claude_file"
+          grep -q "./.claude/skills/daily-watchlist-today.md" "$claude_file"
+          if grep -q "_daily-watchlist-protocols.md" "$claude_file"; then
+            echo "Legacy protocol file reference leaked back into CLAUDE.md."
+            exit 1
+          fi
+          line_count="$(wc -l < "$claude_file")"
+          test "$line_count" -le 15
 
       - name: Verify no redundant files
         shell: bash
