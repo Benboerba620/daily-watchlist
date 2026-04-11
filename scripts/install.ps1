@@ -146,12 +146,14 @@ try {
 Write-Host ""
 Write-Host "Running setup check..."
 & python (Join-Path $TargetDir "scripts\check_setup.py")
-if ($LASTEXITCODE -eq 0) {
+$setupExitCode = $LASTEXITCODE
+if ($setupExitCode -eq 0) {
     Write-Host ""
     Write-Host "OK Installation complete! All checks passed." -ForegroundColor Green
 } else {
     Write-Host ""
     Write-Host "WARNING: Installation complete, but setup check found issues. Please fix them before use." -ForegroundColor Yellow
+    $global:LASTEXITCODE = 0
 }
 
 Write-Host ""
