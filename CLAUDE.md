@@ -1,6 +1,6 @@
 # Daily Watchlist Protocols
 
-这是 Daily Watchlist 系统的源协议文件。安装器会把它复制到目标工作区中的 `_daily-watchlist-protocols.md`。
+这是 Daily Watchlist 系统的源协议文件。新版安装器不会再把它整份复制到目标工作区，而是只向目标 `CLAUDE.md` 注入一个轻量入口段。
 
 ## 目标
 

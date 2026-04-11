@@ -24,9 +24,11 @@
 
 ## 阶段 2：安装
 
-先把仓库 clone 到临时目录，再把安装器跑到目标目录。
+先把仓库 clone 到临时目录，再把安装器跑到目标目录。目标环境需要 Python 3.10+。安装器会自动安装 Python 依赖（`requirements.txt`）并运行环境检查。
 
 Windows PowerShell：
+
+> 如果 PowerShell 阻止运行脚本，先执行：`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 ```powershell
 git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
@@ -42,15 +44,14 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 
 ## 阶段 3：补全配置
 
-填入或调整：
+安装器会自动创建以下工作文件（从模板复制）：
 
-- `config/daily-watchlist.env`
-- `config/daily-watchlist.yaml`
-- `config/daily-watchlist-watchlist.md`
+- `config/daily-watchlist.env` — 填入 API key
+- `config/daily-watchlist.yaml` — 模块开关、阈值、关注方向
+- `config/daily-watchlist-watchlist.md` — 股票池
 
 安装器还会写入：
 
-- `_daily-watchlist-protocols.md`
 - `.claude/skills/daily-watchlist-today.md`
 - `.claude/skills/daily-watchlist-import.md`
 - `templates/daily-watchlist-report-template.md`
@@ -61,24 +62,16 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 
 - 新闻部分应由 Claude Code 的 WebSearch 完成
 - 落到日报前必须做二次验证
-- 二次验证不通过的条目应标记为“待人工确认”
+- 二次验证不通过的条目应标记为"待人工确认"
 
 ## 阶段 4：与现有根 CLAUDE.md 融合
 
-如果目标目录已经有 `CLAUDE.md`，只在末尾追加这一段轻量入口；如果已经存在，就不要重复追加：
+安装器会自动处理 CLAUDE.md 整合：
 
-```markdown
-## Daily Watchlist Protocols
+- 如果目标目录没有 `CLAUDE.md`，创建一个只包含轻量入口的最小版本
+- 如果已有 `CLAUDE.md`，在末尾追加入口段（不重复追加）
 
-当用户要求 Daily Watchlist 工作流（`/dw-today` 或 `/dw-import`；`/watchlist-today` 和 `/watchlist-import` 是兼容别名；只有在不冲突时才使用 `/today` 和 `/import`）时，先读取：
-- `./_daily-watchlist-protocols.md`
-- `./config/daily-watchlist.yaml`
-- `./templates/daily-watchlist-report-template.md`
-
-报告写入 `./daily-watchlist-reports/YYYY-MM/`。默认按保存的模板输出，并告诉用户模板可以随时自行编辑。
-```
-
-如果没有 `CLAUDE.md`，创建一个只包含这段入口的最小版本即可。除非用户明确要求单文件模式，否则不要把完整协议整份塞进根 `CLAUDE.md`。
+入口段指向 skills 文件和配置文件，不拷贝完整协议。除非用户明确要求，否则不要把完整协议塞进根 `CLAUDE.md`。
 
 ## 阶段 5：验证
 

@@ -4,7 +4,6 @@ from pathlib import Path
 
 CONFIG_DIRNAME = "config"
 REPORTS_DIRNAME = "daily-watchlist-reports"
-PROTOCOL_FILENAME = "_daily-watchlist-protocols.md"
 ROOT_INTEGRATION_HEADING = "## Daily Watchlist Protocols"
 
 ENV_FILE_CANDIDATES = (

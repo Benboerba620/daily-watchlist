@@ -35,8 +35,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install validation dependencies
-        run: python -m pip install --upgrade pip requests python-dotenv pyyaml
+      - name: Install dependencies from requirements.txt
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
 
       - name: Compile Python scripts
         run: python -m compileall scripts
@@ -48,17 +48,43 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f ./_release_smoke/scripts/generate_daily_report.py
-          test -f ./_release_smoke/scripts/fetch_market_data.py
-          test -f ./_release_smoke/scripts/fetch_macro_data.py
-          test -f ./_release_smoke/scripts/check_setup.py
-          test -f ./_release_smoke/templates/daily-watchlist-report-template.md
-          test -f ./_release_smoke/config/daily-watchlist.yaml
-          test -f ./_release_smoke/config/daily-watchlist-watchlist.md
-          test -f ./_release_smoke/.claude/skills/daily-watchlist-today.md
-          test -f ./_release_smoke/.claude/skills/daily-watchlist-import.md
+          for f in \
+            scripts/generate_daily_report.py \
+            scripts/fetch_market_data.py \
+            scripts/fetch_macro_data.py \
+            scripts/check_setup.py \
+            scripts/workspace_paths.py \
+            templates/daily-watchlist-report-template.md \
+            config/daily-watchlist.yaml \
+            config/daily-watchlist.env \
+            config/daily-watchlist-watchlist.md \
+            .claude/skills/daily-watchlist-today.md \
+            .claude/skills/daily-watchlist-import.md \
+            CLAUDE.md \
+          ; do
+            if [ ! -f "./_release_smoke/$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            fi
+          done
 
-      - name: Confirm setup check stops at missing env gate
+      - name: Assert no redundant files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in \
+            _daily-watchlist-protocols.md \
+            config/daily-watchlist.env.example \
+            config/daily-watchlist.example.yaml \
+            config/daily-watchlist.watchlist.example.md \
+          ; do
+            if [ -f "./_release_smoke/$f" ]; then
+              echo "UNEXPECTED: $f"
+              exit 1
+            fi
+          done
+
+      - name: Confirm setup check stops at invalid API key gate
         shell: bash
         run: |
           set -euo pipefail
@@ -68,10 +94,10 @@ jobs:
           set -e
           printf '%s\n' "$output"
           if [ "$status" -eq 0 ]; then
-            echo "Expected check_setup.py to fail in smoke test without a configured env file."
+            echo "Expected check_setup.py to fail without a configured API key."
             exit 1
           fi
-          printf '%s\n' "$output" | grep -q "daily-watchlist.env"
+          printf '%s\n' "$output" | grep -q "FMP_API_KEY"
 
   publish:
     needs: validate

@@ -1,0 +1,101 @@
+name: Install Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  install-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run install script (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: bash scripts/install.sh --target-dir ./test-install
+
+      - name: Run install script (Windows)
+        if: runner.os == 'Windows'
+        run: .\scripts\install.ps1 -TargetDir .\test-install
+
+      - name: Verify installed file layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in \
+            scripts/generate_daily_report.py \
+            scripts/fetch_market_data.py \
+            scripts/fetch_macro_data.py \
+            scripts/check_setup.py \
+            scripts/workspace_paths.py \
+            templates/daily-watchlist-report-template.md \
+            config/daily-watchlist.yaml \
+            config/daily-watchlist.env \
+            config/daily-watchlist-watchlist.md \
+            .claude/skills/daily-watchlist-today.md \
+            .claude/skills/daily-watchlist-import.md \
+            CLAUDE.md \
+          ; do
+            if [ ! -f "./test-install/$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            fi
+          done
+          echo "All expected files present."
+
+      - name: Verify no redundant files
+        shell: bash
+        run: |
+          set -euo pipefail
+          FAIL=0
+          # .example files should NOT be copied to target
+          for f in \
+            config/daily-watchlist.env.example \
+            config/daily-watchlist.example.yaml \
+            config/daily-watchlist.watchlist.example.md \
+            _daily-watchlist-protocols.md \
+          ; do
+            if [ -f "./test-install/$f" ]; then
+              echo "UNEXPECTED: $f (should not be in installed workspace)"
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then exit 1; fi
+          echo "No redundant files found."
+
+      - name: Verify Python dependencies importable
+        run: |
+          python -c "import requests; print('requests OK')"
+          python -c "import dotenv; print('python-dotenv OK')"
+          python -c "import yaml; print('pyyaml OK')"
+
+      - name: Verify check_setup.py runs (expect fail without API key)
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          output="$(python ./test-install/scripts/check_setup.py 2>&1)"
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          # Should fail because no real API key is configured
+          if [ "$status" -eq 0 ]; then
+            echo "Expected check_setup.py to fail without API key"
+            exit 1
+          fi
+          # Should mention the env file in its error
+          printf '%s\n' "$output" | grep -qi "FMP_API_KEY\|daily-watchlist.env"
+          echo "check_setup.py correctly reports missing API key."

@@ -50,8 +50,8 @@ def main():
 
     version = sys.version_info
     all_pass &= check(
-        "Python >= 3.8",
-        version >= (3, 8),
+        "Python >= 3.10",
+        version >= (3, 10),
         f"当前版本 {version.major}.{version.minor}.{version.micro}",
     )
 
@@ -73,7 +73,7 @@ def main():
         all_pass &= check(
             f"config/{ENV_FILE_CANDIDATES[0]}",
             False,
-            f"请把 daily-watchlist.env.example 复制为 {ENV_FILE_CANDIDATES[0]} 并填入 API key",
+            f"请创建 {ENV_FILE_CANDIDATES[0]} 或重新运行安装器，然后填入 API key",
         )
     else:
         check(f"config/{env_file.name}", True)
