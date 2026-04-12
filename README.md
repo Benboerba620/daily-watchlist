@@ -34,6 +34,12 @@
 | 🧑‍💻 **会用 Git / 命令行** | [手动安装](#手动安装) |
 | 🤖 **想让 AI agent 帮你装** | 把 [`INSTALL-FOR-AI.md`](./INSTALL-FOR-AI.md) 的链接发给 Claude Code，说"帮我装这个" |
 
+## 最近更新
+
+- `v1.0.1`（2026-04-11）：简化安装后 `CLAUDE.md` 注入、修复 Windows 安装器退出码、新增跨平台 CI 和离线 smoke 测试
+- `v1.0.0`（2026-04-10）：首次发布——`/dw-today` 日报 + `/dw-import` 股票池导入 + 模板驱动 + 双平台安装器
+- 完整历史见 [`CHANGELOG.md`](./CHANGELOG.md)
+
 ---
 
 ## 这是什么？
@@ -362,6 +368,12 @@ MIT
 | 🍎 **macOS / Linux + coding beginner** | [One-shot install (bash)](#-macos--linux-beginner-one-shot-install) |
 | 🧑‍💻 **Comfortable with git / CLI** | [Manual install](#manual-install) |
 | 🤖 **Want an AI agent to install it** | Send [`INSTALL-FOR-AI.md`](./INSTALL-FOR-AI.md) to Claude Code and say "install this for me" |
+
+## Recent Updates
+
+- `v1.0.1` (2026-04-11): Streamlined installed `CLAUDE.md` hint; fixed Windows installer exit code; added cross-platform CI and offline smoke tests
+- `v1.0.0` (2026-04-10): First release — `/dw-today` daily report + `/dw-import` watchlist import + template-driven generation + dual-platform installers
+- Full history: [`CHANGELOG.md`](./CHANGELOG.md)
 
 ---
 
