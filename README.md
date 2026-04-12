@@ -54,54 +54,19 @@
 6. 生成一份结构化的 markdown 日报
 7. （可选）自动归档到 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
 
-```mermaid
-flowchart TB
-    subgraph 配置层
-        ENV[".env<br/>API Keys"]
-        YAML["config.yaml<br/>模块开关 / 阈值 / 关注方向"]
-        WL["watchlist.md<br/>股票池"]
-        TPL["report-template.md<br/>日报模板"]
-    end
-
-    subgraph 数据层["数据层（Python 脚本，输出 JSON）"]
-        FETCH["fetch_market_data.py<br/>行情 + 异动检测 + 财报日历"]
-        MACRO["fetch_macro_data.py<br/>VIX / SPY / 黄金 / 原油 / BTC"]
-    end
-
-    subgraph 生成层
-        GEN["generate_daily_report.py<br/>读取模板 + JSON → 日报骨架"]
-    end
-
-    subgraph Claude 层["Claude Code 层"]
-        NEWS["WebSearch<br/>异动新闻 + 财报反应 + 主题新闻"]
-        VERIFY{"二次验证<br/>（domestic 模式）"}
-        FINAL["完成日报<br/>替换占位 → 写入 .md"]
-    end
-
-    subgraph 输出
-        REPORT["daily-watchlist-reports/<br/>YYYY-MM/YYYY-MM-DD.md"]
-        WIKI["wiki/entities/TICKER/news.md<br/>（可选归档）"]
-    end
-
-    ENV --> FETCH & MACRO
-    YAML --> FETCH & MACRO & GEN
-    WL --> FETCH
-    TPL --> GEN
-
-    FETCH -- JSON --> GEN
-    MACRO -- JSON --> GEN
-
-    GEN -- 骨架 .md --> FINAL
-    YAML -. focus_areas .-> NEWS
-    NEWS --> VERIFY
-    VERIFY -- 通过 --> FINAL
-    VERIFY -- 未通过 --> FINAL
-
-    FINAL --> REPORT
-    FINAL -. 高信号事件 .-> WIKI
 ```
-
-> **两阶段分工**：Python 脚本负责拉数据 + 渲染骨架（快、省 token）；Claude 负责新闻搜索 + 验证 + 补充分析（需要判断力的部分）。
+watchlist.md ──→ fetch_market_data.py ──→ JSON ──┐
+                                                  │
+config.yaml ───→ fetch_macro_data.py ───→ JSON ──┤
+                                                  ├──→ generate_daily_report.py
+                 FMP earnings calendar ──→ JSON ──┤        │
+                                                  │        ├──→ 日报骨架 .md
+report-template.md ───────────────────────────────┘        │
+                                                           ↓
+focus_areas ───→ Claude WebSearch ──────────────→ Claude 补充新闻
+                                                           │
+                                                  wiki/ ←──┘ (归档)
+```
 
 ---
 
@@ -423,55 +388,6 @@ A **daily stock watchlist monitor** that runs inside Claude Code. Maintain a wat
 5. Search industry news based on your focus areas
 6. Generate a structured markdown report
 7. (Optional) Auto-archive to [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
-
-```mermaid
-flowchart TB
-    subgraph Config
-        ENV[".env<br/>API Keys"]
-        YAML["config.yaml<br/>Modules / Thresholds / Focus Areas"]
-        WL["watchlist.md<br/>Stock Pool"]
-        TPL["report-template.md<br/>Report Template"]
-    end
-
-    subgraph Data["Data Layer (Python scripts, JSON output)"]
-        FETCH["fetch_market_data.py<br/>Quotes + Mover Detection + Earnings"]
-        MACRO["fetch_macro_data.py<br/>VIX / SPY / Gold / Oil / BTC"]
-    end
-
-    subgraph Generation
-        GEN["generate_daily_report.py<br/>Template + JSON → Report Skeleton"]
-    end
-
-    subgraph Claude["Claude Code Layer"]
-        NEWS["WebSearch<br/>Mover News + Earnings + Themes"]
-        VERIFY{"Secondary Verify<br/>(domestic mode)"}
-        FINAL["Finalize Report<br/>Fill placeholders → Write .md"]
-    end
-
-    subgraph Output
-        REPORT["daily-watchlist-reports/<br/>YYYY-MM/YYYY-MM-DD.md"]
-        WIKI["wiki/entities/TICKER/news.md<br/>(optional archive)"]
-    end
-
-    ENV --> FETCH & MACRO
-    YAML --> FETCH & MACRO & GEN
-    WL --> FETCH
-    TPL --> GEN
-
-    FETCH -- JSON --> GEN
-    MACRO -- JSON --> GEN
-
-    GEN -- skeleton .md --> FINAL
-    YAML -. focus_areas .-> NEWS
-    NEWS --> VERIFY
-    VERIFY -- pass --> FINAL
-    VERIFY -- fail --> FINAL
-
-    FINAL --> REPORT
-    FINAL -. high-signal events .-> WIKI
-```
-
-> **Two-phase design**: Python scripts handle data fetching + skeleton rendering (fast, token-efficient); Claude handles news search + verification + analysis (the parts requiring judgment).
 
 ---
 
