@@ -2,6 +2,19 @@
 
 这里记录 `daily-watchlist` 的重要更新。版本号使用语义化版本（SemVer），发布在 [GitHub Releases](https://github.com/Benboerba620/daily-watchlist/releases)。
 
+## [1.0.2] - 2026-04-16
+
+### 新增
+
+- FMP 没返回某 ticker 时，脚本自动按备选链兜底：Stooq（零配置，US/JP/DE）→ Finnhub（填 `FINNHUB_API_KEY` 启用，美股）→ EOD（填 `EOD_API_KEY` 启用，港/韩/芬兰）→ yfinance（`ENABLE_YFINANCE=1` 且装好包才启用）
+- README 新增"数据源"小节（中英双版），列出所有实际踩过的备选 API + 状态列 + 各自的坑
+- `config/daily-watchlist.env.example` 增加可选 key 占位：`FINNHUB_API_KEY`、`EOD_API_KEY`、`ENABLE_YFINANCE`
+
+### 说明
+
+- Stooq 用的是 `/q/l/` 实时端点（无需 apikey），不是 `/q/d/l/` 历史端点（2026 起需要 apikey）
+- yfinance 在国内访问不稳定，因此默认关闭，通过 `ENABLE_YFINANCE=1` 显式开启
+
 ## [1.0.1] - 2026-04-11
 
 ### 改进

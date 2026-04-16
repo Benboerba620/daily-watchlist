@@ -320,12 +320,45 @@ reporting:
 
 只有在当前工作区没有冲突时，才建议使用短别名。
 
-### 必需的 API Key
+### 数据源
 
-| 服务 | 用途 | 费用 |
-|------|------|------|
-| [FMP](https://site.financialmodelingprep.com/register) | 美/欧/日股行情 + 财报（必需） | 免费（250 次/天） |
-| [Tushare](https://tushare.pro/register) | A 股 / 港股行情（可选） | 免费 |
+#### 内置数据源
+
+| 服务 | 用途 | 状态 | 费用 |
+|------|------|------|------|
+| [FMP](https://site.financialmodelingprep.com/register) | 美/欧/日股行情 + 财报日历 | 🟢 默认启用（必需） | 免费 250 次/天 |
+| [Tushare](https://tushare.pro/register) | A 股（`.SH`/`.SZ`）+ 港股（`.HK`） | 🟡 填 token 即启用 | 免费 |
+
+#### 备选兜底数据源
+
+下面几个都是我自己踩过坑用过的，各有优劣。脚本会在 FMP 没返回某个 ticker 时，按下表顺序自动兜底（只要对应 key 填好或包装好）：
+
+| 服务 | 覆盖 | 状态 | 费用 | 踩过的坑 |
+|------|------|------|------|----------|
+| [Stooq](https://stooq.com) 实时报价（`/q/l/` 端点） | 美股、日股、德股 | 🟢 零配置自动兜底 | 完全免费，无需 key | **不支持港/韩/芬兰**；`/q/d/l/` 历史端点 2026 起要 apikey，这里只用不要 key 的 light 端点 |
+| [Finnhub](https://finnhub.io/register) | 美股实时报价 | 🟡 填 `FINNHUB_API_KEY` 自动启用 | 免费 60 req/min | 免费层只覆盖美股；**不要用它拉 GLD/USO/COPX 等大宗商品 ETF**，报价严重偏离现货（我们踩过这个坑） |
+| [EOD Historical Data](https://eodhd.com/) | 港股（`.HK`）、韩国（`.KO`）、芬兰（`.HE`）等 Stooq/Tushare 覆盖不到的市场 | 🟡 填 `EOD_API_KEY` 自动启用 | 免费层 20 req/day | 免费层很紧，适合小仓位兜底；付费档起步 $20/月 |
+| [yfinance](https://pypi.org/project/yfinance/)（Yahoo Finance 非官方包） | 全球股票 + 历史 | 🔵 `pip install yfinance` + 设置 `ENABLE_YFINANCE=1` 才启用 | 免费无 key | **国内访问不稳定**，实测经常返回 `No price data found` — 建议有稳定 VPN 或海外 IP 再开 |
+| [AKShare](https://akshare.akfamily.xyz/) | A 股 + **大宗商品期货**（COMEX 黄金、WTI 原油、LME 铜）| 🔵 需要自己改 `scripts/fetch_market_data.py` 对接 | 开源免费，无需 key | 返回格式不稳定、列名会变；主要用来补期货/外盘商品，不建议当股票 quote 主路径 |
+
+**状态说明**：🟢 零配置即用 / 🟡 填一个 key 或装一个包就启用 / 🔵 需要手动改脚本或让 Claude Code 帮你接
+
+#### 如何启用备选兜底
+
+在 `config/daily-watchlist.env` 里按需加：
+
+```env
+# 必需
+FMP_API_KEY=your_fmp_key
+
+# 可选
+TUSHARE_TOKEN=            # A 股 / 港股
+FINNHUB_API_KEY=          # 美股 FMP 兜底
+EOD_API_KEY=              # 港/韩/芬兰 兜底
+ENABLE_YFINANCE=          # 设为 1 启用（需 pip install yfinance，国内慎用）
+```
+
+填上脚本会自动生效。Stooq 无需任何配置，已默认开启 US/JP/DE 自动兜底。
 
 ---
 
@@ -545,12 +578,45 @@ If you found this repo by searching for one of these terms, you're in the right 
 - **Wiki archiving**: auto-integrates with karpathy-claude-wiki
 - **Secondary verification**: for domestic model users, news verified before inclusion
 
-## API Keys
+## Data Sources
 
-| Service | Purpose | Cost |
-|---------|---------|------|
-| [FMP](https://site.financialmodelingprep.com/register) | US/EU/JP quotes + earnings (required) | Free (250 req/day) |
-| [Tushare](https://tushare.pro/register) | A-shares / HK quotes (optional) | Free |
+### Built-in
+
+| Service | Purpose | Status | Cost |
+|---------|---------|--------|------|
+| [FMP](https://site.financialmodelingprep.com/register) | US/EU/JP quotes + earnings calendar | 🟢 Enabled by default (required) | Free, 250 req/day |
+| [Tushare](https://tushare.pro/register) | A-shares (`.SH`/`.SZ`) + HK (`.HK`) | 🟡 Enabled when token is set | Free |
+
+### Fallback data sources
+
+I've personally used every one of these — they have real quirks. The script auto-falls-back to them (in this order) whenever FMP doesn't return a ticker, as long as the matching key / package is available:
+
+| Service | Coverage | Status | Cost | Caveats from real use |
+|---------|----------|--------|------|-----------------------|
+| [Stooq](https://stooq.com) real-time endpoint (`/q/l/`) | US, JP, DE | 🟢 Zero-config auto fallback | Free, no key | **No HK/KR/FI support**; the `/q/d/l/` history endpoint now requires an apikey (2026+), so we only use the key-less light endpoint |
+| [Finnhub](https://finnhub.io/register) | US real-time quotes | 🟡 Auto fallback when `FINNHUB_API_KEY` is set | Free, 60 req/min | US-only on the free tier; **don't use it for commodity ETFs** like GLD/USO/COPX — prices deviate badly from spot (we hit this bug) |
+| [EOD Historical Data](https://eodhd.com/) | HK (`.HK`), KR (`.KO`), FI (`.HE`), other markets Stooq/Tushare miss | 🟡 Auto fallback when `EOD_API_KEY` is set | Free tier: 20 req/day | Free tier is tight; paid tier starts at $20/month |
+| [yfinance](https://pypi.org/project/yfinance/) (unofficial Yahoo Finance) | Global equities + history | 🔵 Enabled only when `pip install yfinance` + `ENABLE_YFINANCE=1` | Free, no key | **Unstable from mainland China** — frequently returns `No price data found`. Only turn on if you have a stable VPN or overseas IP |
+| [AKShare](https://akshare.akfamily.xyz/) | A-shares + **commodity futures** (COMEX gold, WTI oil, LME copper) | 🔵 Requires manual wiring in `scripts/fetch_market_data.py` | Open-source, free, no key | Return shape and column names drift between versions; best as a futures/commodities backfill, not a primary quote source |
+
+**Legend**: 🟢 works out of the box / 🟡 fill one key or install one package to enable / 🔵 manual wiring (or ask Claude Code to do it)
+
+### How to enable fallbacks
+
+Add any of these to `config/daily-watchlist.env`:
+
+```env
+# Required
+FMP_API_KEY=your_fmp_key
+
+# Optional
+TUSHARE_TOKEN=            # A-shares / HK
+FINNHUB_API_KEY=          # US fallback for FMP
+EOD_API_KEY=              # HK / KR / FI fallback
+ENABLE_YFINANCE=          # set to 1 to enable (needs pip install yfinance; flaky in mainland CN)
+```
+
+The script picks them up automatically. Stooq requires no config and is always on for US/JP/DE fallback.
 
 ## Triggers
 

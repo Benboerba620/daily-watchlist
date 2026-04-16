@@ -67,6 +67,9 @@ def load_env(env_path: Path) -> dict[str, str]:
     return {
         "FMP_API_KEY": os.environ.get("FMP_API_KEY", "").strip(),
         "TUSHARE_TOKEN": os.environ.get("TUSHARE_TOKEN", "").strip(),
+        "FINNHUB_API_KEY": os.environ.get("FINNHUB_API_KEY", "").strip(),
+        "EOD_API_KEY": os.environ.get("EOD_API_KEY", "").strip(),
+        "ENABLE_YFINANCE": os.environ.get("ENABLE_YFINANCE", "").strip(),
     }
 
 
@@ -270,6 +273,211 @@ def fetch_tushare_quotes(
     return quotes
 
 
+# --- Fallback data sources ---
+# Used when FMP doesn't return a ticker (rate-limited, symbol not covered, etc.).
+# Order per ticker: Stooq -> Finnhub (if key) -> EOD (if key) -> yfinance (if enabled).
+
+STOOQ_MARKET_SUFFIX = {"US": "us", "JP": "jp", "DE": "de", "UK": "uk"}
+EOD_MARKET_SUFFIX = {"HK": "HK", "KR": "KO", "FI": "HE"}
+
+
+def fetch_stooq_quote(ticker: str, market: str) -> dict[str, Any] | None:
+    suffix = STOOQ_MARKET_SUFFIX.get(market.strip().upper())
+    if not suffix:
+        return None
+    symbol = ticker.split(".")[0].lower()
+    url = (
+        f"https://stooq.com/q/l/?s={symbol}.{suffix}"
+        "&f=sd2t2ohlcvp&h&e=csv"
+    )
+    try:
+        response = requests.get(url, timeout=DEFAULT_TIMEOUT)
+        response.raise_for_status()
+        lines = response.text.strip().splitlines()
+        if len(lines) < 2:
+            return None
+        headers = [h.strip().lower() for h in lines[0].split(",")]
+        values = [v.strip() for v in lines[1].split(",")]
+        if len(headers) != len(values):
+            return None
+        row = dict(zip(headers, values))
+        if row.get("close", "").upper() in ("", "N/D"):
+            return None
+        close = parse_float(row.get("close"))
+        prev_close = parse_float(row.get("prev"))
+        change = (close - prev_close) if close is not None and prev_close is not None else None
+        change_pct = (
+            change / prev_close * 100
+            if change is not None and prev_close
+            else None
+        )
+        return {
+            "symbol": ticker,
+            "price": close,
+            "change": change,
+            "changesPercentage": change_pct,
+            "previousClose": prev_close,
+            "open": parse_float(row.get("open")),
+            "dayHigh": parse_float(row.get("high")),
+            "dayLow": parse_float(row.get("low")),
+            "volume": parse_float(row.get("volume")),
+            "tradeDate": row.get("date", ""),
+            "source": "stooq",
+        }
+    except Exception as exc:  # noqa: BLE001
+        log(f"Warning: stooq fallback failed for {ticker}: {exc}")
+        return None
+
+
+def fetch_finnhub_quote(ticker: str, api_key: str) -> dict[str, Any] | None:
+    url = f"https://finnhub.io/api/v1/quote?symbol={ticker}&token={api_key}"
+    try:
+        payload = request_json(url)
+    except Exception as exc:  # noqa: BLE001
+        log(f"Warning: finnhub fallback failed for {ticker}: {exc}")
+        return None
+    if not isinstance(payload, dict):
+        return None
+    price = parse_float(payload.get("c"))
+    if price in (None, 0, 0.0):
+        return None
+    return {
+        "symbol": ticker,
+        "price": price,
+        "change": parse_float(payload.get("d")),
+        "changesPercentage": parse_float(payload.get("dp")),
+        "previousClose": parse_float(payload.get("pc")),
+        "open": parse_float(payload.get("o")),
+        "dayHigh": parse_float(payload.get("h")),
+        "dayLow": parse_float(payload.get("l")),
+        "volume": None,
+        "tradeDate": str(payload.get("t", "")),
+        "source": "finnhub",
+    }
+
+
+def fetch_eod_quote(ticker: str, market: str, api_key: str) -> dict[str, Any] | None:
+    suffix = EOD_MARKET_SUFFIX.get(market.strip().upper())
+    if not suffix:
+        return None
+    symbol = ticker.split(".")[0]
+    url = (
+        f"https://eodhd.com/api/real-time/{symbol}.{suffix}"
+        f"?api_token={api_key}&fmt=json"
+    )
+    try:
+        payload = request_json(url)
+    except Exception as exc:  # noqa: BLE001
+        log(f"Warning: eod fallback failed for {ticker}: {exc}")
+        return None
+    if not isinstance(payload, dict):
+        return None
+    price = parse_float(payload.get("close"))
+    if price is None or str(payload.get("code", "")).upper() == "NA":
+        return None
+    return {
+        "symbol": ticker,
+        "price": price,
+        "change": parse_float(payload.get("change")),
+        "changesPercentage": parse_float(payload.get("change_p")),
+        "previousClose": parse_float(payload.get("previousClose")),
+        "open": parse_float(payload.get("open")),
+        "dayHigh": parse_float(payload.get("high")),
+        "dayLow": parse_float(payload.get("low")),
+        "volume": parse_float(payload.get("volume")),
+        "tradeDate": str(payload.get("timestamp", "")),
+        "source": "eod",
+    }
+
+
+def fetch_yfinance_quote(ticker: str) -> dict[str, Any] | None:
+    try:
+        import yfinance as yf  # type: ignore
+    except ImportError:
+        return None
+    try:
+        hist = yf.Ticker(ticker).history(period="5d", auto_adjust=False)
+        if hist is None or hist.empty:
+            return None
+        latest = hist.iloc[-1]
+        prev_close = float(hist.iloc[-2]["Close"]) if len(hist) >= 2 else None
+        close = float(latest["Close"])
+        change = (close - prev_close) if prev_close is not None else None
+        change_pct = (
+            change / prev_close * 100
+            if change is not None and prev_close
+            else None
+        )
+        return {
+            "symbol": ticker,
+            "price": close,
+            "change": change,
+            "changesPercentage": change_pct,
+            "previousClose": prev_close,
+            "open": float(latest["Open"]),
+            "dayHigh": float(latest["High"]),
+            "dayLow": float(latest["Low"]),
+            "volume": float(latest["Volume"]),
+            "tradeDate": str(latest.name.date()),
+            "source": "yfinance",
+        }
+    except Exception as exc:  # noqa: BLE001
+        log(f"Warning: yfinance fallback failed for {ticker}: {exc}")
+        return None
+
+
+def fetch_fallback_quote(item: dict[str, str], env: dict[str, str]) -> dict[str, Any] | None:
+    ticker = item["ticker"]
+    market = item.get("market", "")
+    market_upper = market.strip().upper()
+
+    quote = fetch_stooq_quote(ticker, market)
+    if quote:
+        return quote
+
+    finnhub_key = env.get("FINNHUB_API_KEY", "").strip()
+    if finnhub_key and market_upper == "US":
+        quote = fetch_finnhub_quote(ticker, finnhub_key)
+        if quote:
+            return quote
+
+    eod_key = env.get("EOD_API_KEY", "").strip()
+    if eod_key and market_upper in EOD_MARKET_SUFFIX:
+        quote = fetch_eod_quote(ticker, market, eod_key)
+        if quote:
+            return quote
+
+    yf_flag = env.get("ENABLE_YFINANCE", "").strip().lower()
+    if yf_flag in ("1", "true", "yes", "on"):
+        quote = fetch_yfinance_quote(ticker)
+        if quote:
+            return quote
+
+    return None
+
+
+def fetch_fallback_quotes(
+    missing: list[dict[str, str]], env: dict[str, str], max_workers: int
+) -> list[dict[str, Any]]:
+    if not missing:
+        return []
+    recovered: list[dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(missing))) as executor:
+        futures = {
+            executor.submit(fetch_fallback_quote, item, env): item for item in missing
+        }
+        for future in as_completed(futures):
+            item = futures[future]
+            try:
+                result = future.result()
+            except Exception as exc:  # noqa: BLE001
+                log(f"Warning: fallback chain crashed for {item['ticker']}: {exc}")
+                continue
+            if result:
+                recovered.append(result)
+    return recovered
+
+
 def build_quote_record(
     raw_quote: dict[str, Any],
     watchlist_entry: dict[str, str],
@@ -439,6 +647,7 @@ def build_snapshot(
     watchlist: list[dict[str, str]],
     api_key: str,
     tushare_token: str,
+    env: dict[str, str],
     thresholds: dict[str, float],
     max_workers: int,
     include_earnings: bool,
@@ -481,11 +690,30 @@ def build_snapshot(
         if symbol in watchlist_map:
             quotes.append(build_quote_record(raw, watchlist_map[symbol]))
 
-    quotes.sort(key=lambda row: row["ticker"])
     fetched_tickers = {quote["ticker"] for quote in quotes}
-    missing_quotes = [item["ticker"] for item in watchlist if item["ticker"] not in fetched_tickers]
-    if missing_quotes:
-        log(f"Warning: no quote data returned for: {', '.join(missing_quotes)}")
+    missing_items = [item for item in watchlist if item["ticker"] not in fetched_tickers]
+    if missing_items:
+        log(
+            f"Attempting fallback sources for {len(missing_items)} missing ticker(s): "
+            f"{', '.join(item['ticker'] for item in missing_items)}"
+        )
+        fallback_raws = fetch_fallback_quotes(missing_items, env, max_workers)
+        for raw in fallback_raws:
+            symbol = str(raw.get("symbol", "")).strip().upper()
+            if symbol in watchlist_map:
+                quotes.append(build_quote_record(raw, watchlist_map[symbol]))
+        still_missing = [
+            item["ticker"]
+            for item in missing_items
+            if item["ticker"] not in {q["ticker"] for q in quotes}
+        ]
+        if still_missing:
+            log(
+                f"Warning: no quote data returned (even after fallbacks) for: "
+                f"{', '.join(still_missing)}"
+            )
+
+    quotes.sort(key=lambda row: row["ticker"])
     movers = sorted(find_movers(quotes, thresholds), key=lambda row: abs(row["changesPercentage"]), reverse=True)
     return {
         "quotes": quotes,
@@ -550,6 +778,7 @@ def main() -> int:
                 watchlist=watchlist,
                 api_key=api_key,
                 tushare_token=tushare_token,
+                env=env,
                 thresholds=thresholds,
                 max_workers=max(args.max_workers, 1),
                 include_earnings=bool(config_modules.get("earnings", True)),
