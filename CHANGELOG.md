@@ -2,6 +2,30 @@
 
 这里记录 `daily-watchlist` 的重要更新。版本号使用语义化版本（SemVer），发布在 [GitHub Releases](https://github.com/Benboerba620/daily-watchlist/releases)。
 
+## [1.0.3] - 2026-04-17
+
+### 文档
+
+- **README 结构重排**：把 🤖 AI agent 安装升为首推路径，PowerShell/bash 一键脚本和手动安装都折叠进 `<details>` 块；路由表从 4 行改为 3 行（AI agent → 本地脚本 → 手动）
+- 之所以这样改：对真小白来说，"打开终端 + 翻文档找命令 + 复制粘贴 + 改路径参数"的门槛比"给 Claude Code 发一句 URL"高得多；AI agent 路径又是近乎零操作
+- 「让 AI agent 帮你装」章节扩写为 3 步流程 + 明确列出 agent 会问的 7 个澄清问题，小白能提前预期
+- 新增 Beginner FAQ 补 Cursor / Cline / Windsurf 的替代选项链接，避免"没有 Claude Code 就用不了"的错觉
+- 中英双语同步
+
+### 修复
+
+- `install.ps1` / `install.sh`：`TargetDir` 是 cwd 子目录时，自动在项目根 `CLAUDE.md` 追加 Daily Watchlist 路由段（指回 workspace 级 CLAUDE.md 和 skills）。`INSTALL-FOR-AI.md` Phase 4 原本就要求「与现有根 CLAUDE.md 融合」，之前实装只写 workspace 级，没触根。幂等（已存在不重复追加）
+- `scripts/fetch_market_data.py` `--profile` 模式：`.SH` / `.SZ` / `.HK` 后缀的 ticker 强制走 Tushare 而不是 FMP。FMP 对 A 股覆盖不全（比如 `601857.SH` 中国石油拿不到），Tushare 是 A 股 / 港股的权威源，即便 FMP 某个 ticker 碰巧有数据也应优先用 Tushare
+- `scripts/fetch_market_data.py` `classify_market_cap`：根据 country 自动换算市值阈值（CN / HK ≈ 7× USD 阈值），避免人民币市值被 USD 阈值误判
+- `scripts/generate_daily_report.py` `render_other_movers`：去掉已经在「重点异动」表里的 ticker，避免 NVDA 这样的大异动在两个表里重复出现
+
+### 改进
+
+- `scripts/fetch_market_data.py`：`ENABLE_YFINANCE=1` 但 `yfinance` 没装时，warning 改为线程安全的一次性提示，不再每只股票重复输出
+- `.github/workflows/install-test.yml`：CI 新增「Run fallback unit tests」步骤
+- `tests/test_fetch_market_data.py`：新增 fallback 链路的单元测试覆盖
+- `.gitignore`：忽略百度同步盘冲突副本 `*_冲突文件_*`
+
 ## [1.0.2] - 2026-04-16
 
 ### 新增

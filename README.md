@@ -6,18 +6,18 @@
 > 🔗 **"零代码 AI 投研三件套" 之一** ｜ Part of the zero-code AI investment research toolkit
 > [知识库底座 karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) · 日常盯盘 daily-watchlist · [假设追踪 hypothesis-tracker](https://github.com/Benboerba620/hypothesis-tracker)
 
-> AI stock watchlist, portfolio monitoring, earnings tracking, and daily market report workflow for Claude Code.  
+> AI stock watchlist, portfolio monitoring, earnings tracking, and daily market report workflow for Claude Code.
 > 面向 Claude Code 的 AI 股票池监控、异动跟踪、财报日历与每日研究日报工作流。
 
-[Latest Release](https://github.com/Benboerba620/daily-watchlist/releases/tag/v1.0.2) | [All Releases](https://github.com/Benboerba620/daily-watchlist/releases) | [Changelog](./CHANGELOG.md)
+[Latest Release](https://github.com/Benboerba620/daily-watchlist/releases) | [All Releases](https://github.com/Benboerba620/daily-watchlist/releases) | [Changelog](./CHANGELOG.md)
 [中文](#中文) | [English](#english)
 
 # 中文
 
 > AI 驱动的每日股票池监控系统，也是一个给 Claude Code 用的投资研究工作流。维护一个股票池，每天说一句 `/dw-today`，Claude Code 自动拉取行情、检测异动、搜索新闻，生成结构化日报。
 >
-> **状态**：MVP v1.0.2。你负责维护股票池和关注方向；Claude 负责拉数据、搜新闻、写日报。
-> **版本**：[v1.0.2 Release](https://github.com/Benboerba620/daily-watchlist/releases/tag/v1.0.2) | [更新日志](./CHANGELOG.md)
+> **状态**：MVP。你负责维护股票池和关注方向；Claude 负责拉数据、搜新闻、写日报。
+> **版本**：[最新 Release](https://github.com/Benboerba620/daily-watchlist/releases) | [更新日志](./CHANGELOG.md)
 
 **关键词**：AI 股票池、股票监控、投资研究工作流、每日复盘、异动监控、财报日历、portfolio monitoring、stock watchlist、earnings tracker、Claude Code
 
@@ -32,13 +32,13 @@
 
 | 你是谁 | 走哪条路 |
 |---|---|
-| 🪟 **Windows 用户 + 编程小白** | [一键安装（PowerShell）](#-windows-小白一键安装推荐) |
-| 🍎 **macOS / Linux 用户 + 编程小白** | [一键安装（bash）](#-macos--linux-小白一键安装) |
-| 🧑‍💻 **会用 Git / 命令行** | [手动安装](#手动安装) |
-| 🤖 **想让 AI agent 帮你装** | 把 [`INSTALL-FOR-AI.md`](./INSTALL-FOR-AI.md) 的链接发给 Claude Code，说"帮我装这个" |
+| 🤖 **让 AI agent 帮你装（推荐）** | [让 Claude Code / AI agent 帮你装](#-推荐让-claude-code--ai-agent-帮你装) |
+| 🧑‍💻 **会用命令行想自己装** | [进阶：本地脚本安装](#进阶本地脚本安装-windows--macos--linux) |
+| 🛠️ **想完全手动一步步来** | [进阶：手动安装](#进阶手动安装-5-分钟) |
 
 ## 最近更新
 
+- `2026-04-17`：README 结构重排（AI agent 安装升为首推），install 脚本现在会给根 CLAUDE.md 追加路由段，`--profile` 模式下 A 股/港股强制走 Tushare（FMP 对 `.SH/.SZ` 覆盖不全），smoke 报告去重
 - `v1.0.2`（2026-04-16）：新增 Stooq / Finnhub / EOD / yfinance 行情兜底链，README 增加数据源说明，`env.example` 增加可选配置
 - `v1.0.1`（2026-04-11）：简化安装后 `CLAUDE.md` 注入、修复 Windows 安装器退出码、新增跨平台 CI 和离线 smoke 测试
 - `v1.0.0`（2026-04-10）：首次发布——`/dw-today` 日报 + `/dw-import` 股票池导入 + 模板驱动 + 双平台安装器
@@ -82,160 +82,146 @@ focus_areas ───→ Claude WebSearch ────────────�
 2. 在 Dashboard 复制你的 API Key
 3. 免费层每天 250 次请求，个人使用完全够
 
-如果你关注 **A 股或港股**，还需要一个 Tushare token（可选）：
+如果你关注 **A 股或港股**，还需要一个 Tushare token（推荐，A 股走 FMP 覆盖不全）：
 - 前往 [tushare.pro](https://tushare.pro/register) 注册，获取 token
 
 > 💡 **FMP 250/天不够用、或某只股票 FMP 没数据？** 脚本内置了自动兜底链：**Stooq**（零配置，美/日/德）、**Finnhub**（填 key 即启用，美股）、**EOD**（填 key 即启用，港/韩/芬兰）、**yfinance**（可选开关，国内慎用）。每个源的覆盖范围、免费额度、踩过的坑见下面 [数据源](#数据源) 章节。
 
 ---
 
-## 🪟 Windows 小白：一键安装（推荐）
+## 🤖 推荐：让 Claude Code / AI agent 帮你装
 
-如果你 **第一次接触这类项目** + **不会 Git / 命令行**，按这 5 步来。
+**为什么推荐这条路**：对真小白来说，"打开终端 + 翻文档找命令 + 复制粘贴 + 改路径参数"的门槛比"给 Claude Code 发一句话"高得多。AI agent 路径几乎零操作。
 
-**开始前你只需要知道**：
-- 你**不需要**懂编程
-- 你**不需要**会 Markdown
-- 你的工作是"维护股票池 + 每天说 `/dw-today`"
-- 推荐环境：**Windows + Claude Code**
+**前置**（各 1-3 分钟）：
+1. 装好 [Claude Code](https://claude.ai/claude-code)（Cursor / Cline / Windsurf 也行，只要支持 Agent 模式）
+2. 拿到 [FMP API Key](https://site.financialmodelingprep.com/register)（免费，注册 1 分钟）
+3. 关心 A 股/港股的话，顺手拿个 [Tushare token](https://tushare.pro/register)
 
-### 1. 安装前置工具
+**3 步就好**：
 
-- **Python 3.10+**：前往 [python.org](https://www.python.org/downloads/) 下载安装（勾选 "Add to PATH"）
-- **Claude Code**：前往 [claude.ai/claude-code](https://claude.ai/claude-code) 安装
-- **Git**（可选）：有就用 git clone，没有就下载 ZIP
+1. 在 Claude Code 里打开你想安装的项目目录（或一个全新空文件夹）
+2. 给 agent 发：
 
-### 2. 下载这个项目
+   > 帮我装这个：https://github.com/Benboerba620/daily-watchlist/blob/main/INSTALL-FOR-AI.md
 
-二选一：
-- 会用 git：打开终端，运行 `git clone https://github.com/Benboerba620/daily-watchlist.git`
-- 不会用 git：在 GitHub 页面点 **Code → Download ZIP**，解压
+3. agent 会按 [INSTALL-FOR-AI.md](./INSTALL-FOR-AI.md) 协议问你 7 个问题 → 自动 clone → 跑安装器 → 填 key → 生成配置 → 跑验证，全程你只需要回答问题
 
-### 3. 一键安装到你的项目目录
+**agent 会问你的 7 个问题**（提前想一下答案）：
 
-打开 PowerShell（Windows 搜索栏搜"PowerShell"），运行：
+1. 装到哪个目录？（推荐：当前项目下的 `./daily-watchlist/`）
+2. 主要关注哪个市场？（`US` / `CN` / `HK` / `Mixed`）
+3. 你的 `FMP_API_KEY` 是什么？
+4. 是否需要 `TUSHARE_TOKEN`？（A 股/港股必需）
+5. 需要写入哪些 focus areas？（投资主题标签，比如 `AI全栈`、`能源`、`航运`，3-8 个）
+6. 你已经有 watchlist 吗？（没有的话用默认模板起）
+7. 后续主要用哪类模型？（国际模型 `default` / 国产模型 `domestic`，后者会自动开新闻二次验证）
 
-```powershell
-# 如果 PowerShell 提示"无法运行脚本"，先执行这行（只需一次）：
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+**小白常见问题**：
 
-cd 你下载解压的路径\daily-watchlist
-.\scripts\install.ps1 -TargetDir "D:\my-investment"
-```
-
-如果安装器最后只提示 `FMP_API_KEY` 未填写，这是正常的首次安装状态，不算安装失败。
-
-这一条命令会自动帮你：
-- 复制脚本、模板、Claude skills 到目标目录
-- 创建配置文件（你只需要填 API key）
-- 创建日报输出目录
-- 设置 `CLAUDE.md`（已有文件时只追加轻量入口）
-
-如果你还没有自己的项目目录，把 `-TargetDir` 指到一个全新的空文件夹即可。
-
-### 4. 填入你的 API Key
-
-安装脚本已经自动创建了配置文件，直接编辑即可：
-
-```powershell
-notepad "D:\my-investment\config\daily-watchlist.env"
-```
-
-在打开的记事本里，把 `your_fmp_api_key_here` 替换成你在第 0 步拿到的 FMP API Key，保存。
-
-### 5. 打开 Claude Code，导入你的股票池
-
-在 Claude Code 中说：
-
-> /dw-import
-
-然后粘贴你的股票列表（逗号分隔就行，200 只以内都没问题）：
-
-> AAPL, MSFT, GOOGL, NVDA, TSLA, AMZN, JPM, XOM, UNH, JNJ
-
-Claude 会自动查询每只股票的信息，按行业分类，让你确认后保存。
-
-然后说：
-
-> /dw-today
-
-你的第一份日报就生成了。
-
-### 小白常见问题
-
-- **不懂 Git，能用吗？** 可以，下载 ZIP 解压也行。
+- **没装 Claude Code？** [Cursor](https://cursor.com) / [Cline](https://cline.bot) / [Windsurf](https://codeium.com/windsurf) 这些支持 Agent 模式的 IDE 同样能跑 `INSTALL-FOR-AI.md` 协议。
+- **不想污染现有项目？** 告诉 agent 装到一个全新的空文件夹。
 - **免费够用吗？** FMP 免费层 250 次/天，监控 100 只股票 + 宏观数据绰绰有余。
-- **只关注 A 股？** 需要额外注册 Tushare（免费），在 `.env` 里填入 `TUSHARE_TOKEN`。
-- **只想先试试，不想污染现有项目？** 把 `-TargetDir` 指到一个全新的空文件夹。
-- **日报在哪？** `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md`。
-- **怎么修改关注方向？** 编辑 `config/daily-watchlist.yaml` 里的 `focus_areas`。
+- **A 股也能监控？** 能。Tushare token 走 `.SH`/`.SZ`/`.HK` 后缀，FMP 走美股/欧股/日股。
+- **日报在哪？** `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md`，agent 装完会直接告诉你。
+- **怎么改关注方向？** 装完后编辑 `config/daily-watchlist.yaml` 里的 `focus_areas`。
 
 ---
 
-## 🍎 macOS / Linux 小白：一键安装
+<details>
+<summary><b>🧑‍💻 进阶：本地脚本安装（Windows / macOS / Linux）</b></summary>
 
-和 Windows 版完全等价的 bash 版本。
+适合已经会用命令行的人。脚本已经处理了依赖安装、配置生成、CLAUDE.md 整合。
 
-### 1. 下载
+### 前置
+
+- **Python 3.10+**（[python.org](https://www.python.org/downloads/)，Windows 记得勾选 "Add to PATH"）
+- **Claude Code**（[claude.ai/claude-code](https://claude.ai/claude-code)）
+- **FMP API Key**（[免费注册](https://site.financialmodelingprep.com/register)）
+- 可选：**Tushare token**（[tushare.pro](https://tushare.pro/register)），A 股/港股必需
+
+### Windows PowerShell
+
+```powershell
+# 如果 PowerShell 阻止脚本，先执行一次（只需一次）：
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
+.\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
+```
+
+### macOS / Linux bash
+
+```bash
+git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
+bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
+```
+
+### 装完之后
+
+1. 编辑 `./daily-watchlist/config/daily-watchlist.env`，填 `FMP_API_KEY`（可选 `TUSHARE_TOKEN`）
+2. 按需编辑 `./daily-watchlist/config/daily-watchlist.yaml`（market、模块开关、focus_areas）
+3. 在 Claude Code 里说 `/dw-import` 导入股票池，说 `/dw-today` 生成第一份日报
+4. 清理临时目录：`rm -rf .daily-watchlist-tmp`（或 `Remove-Item -Recurse .daily-watchlist-tmp`）
+
+> 安装器检测到首次安装 `FMP_API_KEY` 未填是正常状态，不算失败。填完再跑 `python ./daily-watchlist/scripts/check_setup.py` 验证。
+
+</details>
+
+<details>
+<summary><b>🛠️ 进阶：手动安装（5 分钟）</b></summary>
+
+只想弄清楚每一步发生了什么的话走这条。
 
 ```bash
 git clone https://github.com/Benboerba620/daily-watchlist.git
 cd daily-watchlist
+pip install -r requirements.txt
 ```
 
-不会用 git：从 GitHub 页面 **Code → Download ZIP**，解压，`cd` 进去。
+然后手动：
 
-### 2. 一键安装
+1. 新建一个工作目录，比如 `~/my-investment/`
+2. 把以下结构复制过去：
+   ```
+   my-investment/
+   ├── config/
+   │   ├── daily-watchlist.env            # 从 config/daily-watchlist.env.example 复制，填 FMP_API_KEY
+   │   ├── daily-watchlist.yaml           # 从 config/daily-watchlist.example.yaml 复制，改 market/focus_areas
+   │   └── daily-watchlist-watchlist.md   # 从 config/daily-watchlist.watchlist.example.md 复制，加你的股票
+   ├── scripts/
+   │   ├── fetch_market_data.py
+   │   ├── fetch_macro_data.py
+   │   ├── check_setup.py
+   │   ├── generate_daily_report.py
+   │   └── workspace_paths.py
+   ├── templates/
+   │   └── daily-watchlist-report-template.md
+   └── .claude/
+       └── skills/
+           ├── daily-watchlist-today.md
+           └── daily-watchlist-import.md
+   ```
+3. 在 `my-investment/CLAUDE.md` 里写入（让 Claude Code 找到 skills）：
+   ```markdown
+   # Workspace Instructions
 
-```bash
-bash scripts/install.sh --target-dir ~/my-investment
-```
+   ## Daily Watchlist
 
-如果安装器最后只提示 `FMP_API_KEY` 未填写，这是正常的首次安装状态，不算安装失败。
+   For Daily Watchlist requests, prefer /dw-today and /dw-import.
 
-### 3. 填入 API Key
+   Read these first:
+   - ./.claude/skills/daily-watchlist-today.md
+   - ./.claude/skills/daily-watchlist-import.md
+   - ./config/daily-watchlist.yaml
+   - ./config/daily-watchlist-watchlist.md
+   ```
+4. `cd my-investment && python scripts/check_setup.py`，所有项绿色就 OK
+5. Claude Code 里说 `/dw-import` → `/dw-today`
 
-安装脚本已经自动创建了配置文件，直接编辑即可：
+> 推荐用一键脚本（上面那个折叠块）或 AI agent 协议。手动装容易漏 `.claude/skills/` 这类隐藏目录。
 
-```bash
-nano ~/my-investment/config/daily-watchlist.env
-```
-
-### 4. 打开 Claude Code
-
-先说 `/dw-import`，粘贴你的股票列表。然后说 `/dw-today` 生成第一份日报。
-
----
-
-## 手动安装
-
-适合已经会用 git / 命令行的人。
-
-```bash
-git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
-
-# macOS / Linux
-bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
-
-# Windows PowerShell
-.\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
-```
-
-安装后：
-1. 编辑 `config/daily-watchlist.env` 填入 FMP API key（安装脚本已自动创建）
-2. 按需编辑 `config/daily-watchlist.yaml`（模块开关、异动阈值、关注方向）
-3. `python scripts/check_setup.py` 验证环境
-4. 在 Claude Code 中说 `/dw-import` 导入股票池，说 `/dw-today` 生成日报
-
----
-
-## 让 AI agent 帮你装
-
-打开 Claude Code（或 Cursor / Cline 等），发这条消息：
-
-> 帮我装这个：https://github.com/Benboerba620/daily-watchlist/blob/main/INSTALL-FOR-AI.md
-
-Agent 会按安装协议走完全流程：确认市场、填入 key、导入股票池、生成配置、交付。
+</details>
 
 ---
 
@@ -253,7 +239,7 @@ Agent 会按安装协议走完全流程：确认市场、填入 key、导入股�
 ### 股票池管理
 
 说 `/dw-import`，粘贴 ticker 列表（支持 200+），Claude 自动：
-- 查询公司名、市值、行业
+- 查询公司名、市值、行业（A 股/港股自动走 Tushare，美/欧/日股走 FMP）
 - 按行业分类
 - 让你确认后保存到 `config/daily-watchlist-watchlist.md`
 
@@ -333,7 +319,9 @@ reporting:
 | 服务 | 用途 | 状态 | 费用 |
 |------|------|------|------|
 | [FMP](https://site.financialmodelingprep.com/register) | 美/欧/日股行情 + 财报日历 | 🟢 默认启用（必需） | 免费 250 次/天 |
-| [Tushare](https://tushare.pro/register) | A 股（`.SH`/`.SZ`）+ 港股（`.HK`） | 🟡 填 token 即启用 | 免费 |
+| [Tushare](https://tushare.pro/register) | A 股（`.SH`/`.SZ`）+ 港股（`.HK`） | 🟡 填 token 即启用（A 股/港股必需） | 免费 |
+
+> **2026-04-17 起**：`--profile` 模式下，`.SH`/`.SZ`/`.HK` 后缀的 ticker 强制走 Tushare 而不是 FMP。FMP 对 A 股覆盖不完整（比如 `601857.SH` 中国石油拿不到），Tushare 是 A 股/港股的权威源。
 
 #### 备选兜底数据源
 
@@ -387,8 +375,8 @@ MIT
 
 > An AI-powered daily stock monitoring system and investing workflow for Claude Code. Maintain a watchlist, say `/dw-today`, and Claude Code automatically fetches prices, detects movers, searches for news, and generates a structured daily report.
 >
-> **Status**: MVP v1.0.2. You maintain the watchlist and focus areas; Claude handles data, news, and reports.
-> **Release**: [v1.0.2](https://github.com/Benboerba620/daily-watchlist/releases/tag/v1.0.2) | [Changelog](./CHANGELOG.md)
+> **Status**: MVP. You maintain the watchlist and focus areas; Claude handles data, news, and reports.
+> **Release**: [Latest](https://github.com/Benboerba620/daily-watchlist/releases) | [Changelog](./CHANGELOG.md)
 
 **Keywords**: AI stock watchlist, portfolio monitoring, stock mover detection, earnings tracker, daily stock report, investing workflow, Claude Code, watchlist automation
 
@@ -403,13 +391,13 @@ MIT
 
 | Who you are | Where to go |
 |---|---|
-| 🪟 **Windows + coding beginner** | [One-shot install (PowerShell)](#-windows-beginner-one-shot-install-recommended) |
-| 🍎 **macOS / Linux + coding beginner** | [One-shot install (bash)](#-macos--linux-beginner-one-shot-install) |
-| 🧑‍💻 **Comfortable with git / CLI** | [Manual install](#manual-install) |
-| 🤖 **Want an AI agent to install it** | Send [`INSTALL-FOR-AI.md`](./INSTALL-FOR-AI.md) to Claude Code and say "install this for me" |
+| 🤖 **Let an AI agent install it (recommended)** | [Let Claude Code / an AI agent install it](#-recommended-let-claude-code--an-ai-agent-install-it) |
+| 🧑‍💻 **Comfortable with CLI, want to run the scripts yourself** | [Advanced: local script install](#advanced-local-script-install-windows--macos--linux) |
+| 🛠️ **Want to do every step by hand** | [Advanced: manual install](#advanced-manual-install-5-min) |
 
 ## Recent Updates
 
+- `2026-04-17`: README restructure (AI agent install promoted to primary path), installer now appends a routing pointer to the project-root CLAUDE.md, `--profile` mode routes A-shares/HK to Tushare (FMP coverage of `.SH/.SZ` is incomplete), smoke report dedup
 - `v1.0.2` (2026-04-16): Added Stooq / Finnhub / EOD / yfinance quote fallbacks, documented data-source tradeoffs in README, and added optional env knobs
 - `v1.0.1` (2026-04-11): Streamlined installed `CLAUDE.md` hint; fixed Windows installer exit code; added cross-platform CI and offline smoke tests
 - `v1.0.0` (2026-04-10): First release — `/dw-today` daily report + `/dw-import` watchlist import + template-driven generation + dual-platform installers
@@ -439,130 +427,146 @@ You need a **FMP API Key** (free):
 2. Copy your API Key from the Dashboard
 3. Free tier: 250 requests/day, more than enough for personal use
 
-For **A-shares or HK stocks**, also get a Tushare token (optional):
+For **A-shares or HK stocks**, also get a Tushare token (recommended — FMP coverage of A-shares is incomplete):
 - Register at [tushare.pro](https://tushare.pro/register)
 
 > 💡 **Hit the FMP 250/day cap, or a ticker FMP doesn't cover?** The script has a built-in fallback chain: **Stooq** (zero-config, US/JP/DE), **Finnhub** (key-to-enable, US), **EOD** (key-to-enable, HK/KR/FI), **yfinance** (opt-in, unstable in mainland CN). Coverage, free tiers, and real caveats for each source: see the [Data Sources](#data-sources) section below.
 
 ---
 
-## 🪟 Windows beginner: one-shot install (recommended)
+## 🤖 Recommended: let Claude Code / an AI agent install it
 
-If you're **new to projects like this** + **don't know git / CLI**, follow these 5 steps.
+**Why this is the easiest path**: if you're new to this kind of tool, "open a terminal + find the right command in docs + copy-paste + adjust paths" is much higher friction than "paste one URL into Claude Code." The AI agent path is nearly zero-op.
 
-**Before you start, you only need to know**:
-- You **don't** need to know programming
-- You **don't** need to know Markdown
-- Your job is: "maintain a stock list + say `/dw-today` every day"
-- Recommended: **Windows + Claude Code**
+**Prerequisites** (1–3 min each):
+1. Install [Claude Code](https://claude.ai/claude-code) (Cursor / Cline / Windsurf work too, as long as they support Agent mode)
+2. Get a free [FMP API Key](https://site.financialmodelingprep.com/register) (1-min signup)
+3. For A-shares / HK coverage, grab a [Tushare token](https://tushare.pro/register) too
 
-### 1. Install prerequisites
+**3 steps**:
 
-- **Python 3.10+**: download from [python.org](https://www.python.org/downloads/) (check "Add to PATH")
-- **Claude Code**: install from [claude.ai/claude-code](https://claude.ai/claude-code)
-- **Git** (optional): if you have it, use `git clone`; otherwise download ZIP
+1. Open your project directory (or a fresh empty folder) in Claude Code
+2. Send the agent:
 
-### 2. Download this project
+   > Install this for me: https://github.com/Benboerba620/daily-watchlist/blob/main/INSTALL-FOR-AI.md
 
-Either:
-- With git: `git clone https://github.com/Benboerba620/daily-watchlist.git`
-- Without git: on GitHub, click **Code → Download ZIP**, then unzip
+3. The agent follows the [INSTALL-FOR-AI.md](./INSTALL-FOR-AI.md) protocol: asks 7 clarifying questions → clones → runs installer → fills keys → generates config → runs verification. All you do is answer questions.
 
-### 3. One-shot install
+**The 7 questions the agent will ask** (have answers ready):
 
-Open PowerShell (search "PowerShell" in Windows), run:
+1. Where should the workspace be installed? (default: `./daily-watchlist/`)
+2. Primary market? (`US` / `CN` / `HK` / `Mixed`)
+3. Your `FMP_API_KEY`?
+4. Need `TUSHARE_TOKEN`? (required for A-shares / HK)
+5. Which focus areas? (investment theme tags like `AI full-stack`, `Energy`, `Shipping` — 3–8 tags)
+6. Do you already have a watchlist? (if not, start from the template)
+7. Which model will you use day-to-day? (international `default` / domestic `domestic` — the latter auto-enables news secondary verification)
 
-```powershell
-# If PowerShell says "cannot run scripts", run this first (one-time only):
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+**Beginner FAQ**:
 
-cd path\to\daily-watchlist
-.\scripts\install.ps1 -TargetDir "D:\my-investment"
-```
-
-This copies scripts, templates, Claude skills, creates config files, and sets up the report directory.
-
-### 4. Add your API Key
-
-The install script already created the config file. Just edit it:
-
-```powershell
-notepad "D:\my-investment\config\daily-watchlist.env"
-```
-
-Replace `your_fmp_api_key_here` with your FMP API Key, save.
-
-### 5. Open Claude Code and start
-
-Say `/dw-import`, then paste your stock list:
-
-> AAPL, MSFT, GOOGL, NVDA, TSLA, AMZN, JPM, XOM, UNH, JNJ
-
-Claude auto-classifies them by sector. Confirm, then say `/dw-today` for your first report.
-
-### Beginner FAQ
-
-- **No git?** Download ZIP works fine.
-- **Is the free tier enough?** Yes. 250 req/day covers 100+ stocks + macro.
-- **Only follow A-shares?** Register Tushare (free), add `TUSHARE_TOKEN` to `.env`.
-- **Just want to try without affecting existing files?** Point `-TargetDir` at a new empty folder.
-- **Where are my reports?** `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md`
-- **How to change focus areas?** Edit `focus_areas` in `config/daily-watchlist.yaml`.
+- **No Claude Code?** [Cursor](https://cursor.com) / [Cline](https://cline.bot) / [Windsurf](https://codeium.com/windsurf) also support Agent mode and can run `INSTALL-FOR-AI.md`.
+- **Don't want to mix into an existing project?** Tell the agent to install into a fresh empty folder.
+- **Is the free tier enough?** Yes. FMP 250 req/day covers 100+ stocks + macro.
+- **Can I monitor A-shares?** Yes. Tushare handles `.SH`/`.SZ`/`.HK` suffixes; FMP handles US/EU/JP.
+- **Where are my reports?** `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md` — the agent will show you after install.
+- **How to change focus areas?** Edit `focus_areas` in `config/daily-watchlist.yaml` after install.
 
 ---
 
-## 🍎 macOS / Linux beginner: one-shot install
+<details>
+<summary><b>🧑‍💻 Advanced: local script install (Windows / macOS / Linux)</b></summary>
 
-Behaviour-equivalent bash version.
+For folks comfortable with the CLI. The scripts handle dependencies, config generation, and CLAUDE.md integration.
 
-### 1. Download
+### Prereqs
+
+- **Python 3.10+** ([python.org](https://www.python.org/downloads/), Windows: check "Add to PATH")
+- **Claude Code** ([claude.ai/claude-code](https://claude.ai/claude-code))
+- **FMP API Key** ([free signup](https://site.financialmodelingprep.com/register))
+- Optional: **Tushare token** ([tushare.pro](https://tushare.pro/register)) — required for A-shares / HK
+
+### Windows PowerShell
+
+```powershell
+# If PowerShell blocks scripts, run this once:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
+.\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
+```
+
+### macOS / Linux bash
+
+```bash
+git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
+bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
+```
+
+### After install
+
+1. Edit `./daily-watchlist/config/daily-watchlist.env` — add `FMP_API_KEY` (optional `TUSHARE_TOKEN`)
+2. Optionally edit `./daily-watchlist/config/daily-watchlist.yaml` (market, module toggles, focus_areas)
+3. In Claude Code, say `/dw-import` to load your watchlist, then `/dw-today` for your first report
+4. Clean up: `rm -rf .daily-watchlist-tmp` (or `Remove-Item -Recurse .daily-watchlist-tmp`)
+
+> A missing `FMP_API_KEY` on first install is expected — not a failure. After filling it, run `python ./daily-watchlist/scripts/check_setup.py` to verify.
+
+</details>
+
+<details>
+<summary><b>🛠️ Advanced: manual install (5 min)</b></summary>
+
+Take this path if you want to understand every step.
 
 ```bash
 git clone https://github.com/Benboerba620/daily-watchlist.git
 cd daily-watchlist
+pip install -r requirements.txt
 ```
 
-### 2. Install
+Then manually:
 
-```bash
-bash scripts/install.sh --target-dir ~/my-investment
-```
+1. Create your workspace, e.g. `~/my-investment/`
+2. Copy this structure over:
+   ```
+   my-investment/
+   ├── config/
+   │   ├── daily-watchlist.env            # from config/daily-watchlist.env.example, fill FMP_API_KEY
+   │   ├── daily-watchlist.yaml           # from config/daily-watchlist.example.yaml, adjust market/focus_areas
+   │   └── daily-watchlist-watchlist.md   # from config/daily-watchlist.watchlist.example.md, add your tickers
+   ├── scripts/
+   │   ├── fetch_market_data.py
+   │   ├── fetch_macro_data.py
+   │   ├── check_setup.py
+   │   ├── generate_daily_report.py
+   │   └── workspace_paths.py
+   ├── templates/
+   │   └── daily-watchlist-report-template.md
+   └── .claude/
+       └── skills/
+           ├── daily-watchlist-today.md
+           └── daily-watchlist-import.md
+   ```
+3. Write to `my-investment/CLAUDE.md` so Claude Code finds the skills:
+   ```markdown
+   # Workspace Instructions
 
-### 3. Add API Key
+   ## Daily Watchlist
 
-The install script already created the config file. Just edit it:
+   For Daily Watchlist requests, prefer /dw-today and /dw-import.
 
-```bash
-nano ~/my-investment/config/daily-watchlist.env
-```
+   Read these first:
+   - ./.claude/skills/daily-watchlist-today.md
+   - ./.claude/skills/daily-watchlist-import.md
+   - ./config/daily-watchlist.yaml
+   - ./config/daily-watchlist-watchlist.md
+   ```
+4. `cd my-investment && python scripts/check_setup.py` — all green = OK
+5. In Claude Code: `/dw-import` → `/dw-today`
 
-### 4. Open Claude Code
+> Prefer the one-shot script (collapsed block above) or the AI agent protocol. Manual installs tend to miss hidden directories like `.claude/skills/`.
 
-Say `/dw-import`, paste your tickers. Then `/dw-today` for your first report.
-
----
-
-## Manual install
-
-```bash
-git clone https://github.com/Benboerba620/daily-watchlist.git .daily-watchlist-tmp
-
-# macOS / Linux
-bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
-
-# Windows PowerShell
-.\.daily-watchlist-tmp\scripts\install.ps1 -TargetDir .\daily-watchlist
-```
-
-Then: edit `config/daily-watchlist.env` to add your API key (auto-created by installer), review `config/daily-watchlist.yaml`, run `python scripts/check_setup.py`, then use `/dw-import` and `/dw-today`. Prefer the `/dw-*` commands in shared workspaces.
-
----
-
-## Let an AI agent install it
-
-Open Claude Code (or Cursor / Cline) and say:
-
-> Install this for me: https://github.com/Benboerba620/daily-watchlist/blob/main/INSTALL-FOR-AI.md
+</details>
 
 ---
 
@@ -594,7 +598,9 @@ If you found this repo by searching for one of these terms, you're in the right 
 | Service | Purpose | Status | Cost |
 |---------|---------|--------|------|
 | [FMP](https://site.financialmodelingprep.com/register) | US/EU/JP quotes + earnings calendar | 🟢 Enabled by default (required) | Free, 250 req/day |
-| [Tushare](https://tushare.pro/register) | A-shares (`.SH`/`.SZ`) + HK (`.HK`) | 🟡 Enabled when token is set | Free |
+| [Tushare](https://tushare.pro/register) | A-shares (`.SH`/`.SZ`) + HK (`.HK`) | 🟡 Enabled when token is set (required for A-shares / HK) | Free |
+
+> **As of 2026-04-17**: in `--profile` mode, tickers with `.SH`/`.SZ`/`.HK` suffixes are forced through Tushare regardless of FMP availability. FMP's A-share coverage is incomplete (e.g. `601857.SH` China Petroleum isn't returned), and Tushare is the authoritative source for those markets.
 
 ### Fallback data sources
 
