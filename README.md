@@ -3,6 +3,9 @@
 [![Release](https://img.shields.io/github/v/release/Benboerba620/daily-watchlist?sort=semver)](https://github.com/Benboerba620/daily-watchlist/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+> 🔗 **"零代码 AI 投研三件套" 之一** ｜ Part of the zero-code AI investment research toolkit
+> [知识库底座 karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) · 日常盯盘 daily-watchlist · [假设追踪 hypothesis-tracker](https://github.com/Benboerba620/hypothesis-tracker)
+
 > AI stock watchlist, portfolio monitoring, earnings tracking, and daily market report workflow for Claude Code.  
 > 面向 Claude Code 的 AI 股票池监控、异动跟踪、财报日历与每日研究日报工作流。
 
