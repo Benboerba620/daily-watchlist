@@ -184,13 +184,21 @@ def render_key_movers(movers: list[dict[str, Any]]) -> str:
     return "\n".join(rows)
 
 
-def render_other_movers(quotes: list[dict[str, Any]]) -> str:
+def render_other_movers(
+    quotes: list[dict[str, Any]], movers: list[dict[str, Any]] | None = None
+) -> str:
     rows = [
         "| Ticker | 名称 | 涨跌幅 |",
         "|--------|------|--------|",
     ]
+    mover_tickers = {item["ticker"] for item in (movers or []) if "ticker" in item}
     other_movers = sorted(
-        [item for item in quotes if item.get("changesPercentage") is not None],
+        [
+            item
+            for item in quotes
+            if item.get("changesPercentage") is not None
+            and item.get("ticker") not in mover_tickers
+        ],
         key=lambda item: abs(float(item["changesPercentage"])),
         reverse=True,
     )[:5]
@@ -319,7 +327,7 @@ def build_report(
         MARKET_OVERVIEW_TABLE=market_table,
         MARKET_SUMMARY=market_summary,
         KEY_MOVERS_TABLE=render_key_movers(movers),
-        OTHER_MOVERS_TABLE=render_other_movers(quotes),
+        OTHER_MOVERS_TABLE=render_other_movers(quotes, movers),
         EARNINGS_REPORTED_TABLE=earnings_reported,
         EARNINGS_UPCOMING_TABLE=earnings_upcoming,
         THEMES_SECTION=render_themes(config, modules["focus_areas"]),

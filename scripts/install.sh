@@ -87,7 +87,7 @@ copy_if_needed "$REPO_DIR/config/daily-watchlist.env.example" "$TARGET_DIR/confi
 copy_if_needed "$REPO_DIR/config/daily-watchlist.example.yaml" "$TARGET_DIR/config/daily-watchlist.yaml"
 copy_if_needed "$REPO_DIR/config/daily-watchlist.watchlist.example.md" "$TARGET_DIR/config/daily-watchlist-watchlist.md"
 
-# --- CLAUDE.md integration (lightweight hint only) ---
+# --- Workspace-level CLAUDE.md (always written inside $TARGET_DIR) ---
 PROTOCOL_HEADING="## Daily Watchlist"
 LEGACY_PROTOCOL_HEADING="## Daily Watchlist Protocols"
 
@@ -124,6 +124,35 @@ Read these first:
 
 Write reports to `./daily-watchlist-reports/YYYY-MM/`.
 EOF
+fi
+
+# --- Project-root CLAUDE.md pointer (only if TARGET_DIR is a subdirectory of cwd) ---
+CWD="$(pwd)"
+ABS_TARGET="$(cd "$TARGET_DIR" 2>/dev/null && pwd || echo "")"
+if [[ -n "$ABS_TARGET" && "$ABS_TARGET" != "$CWD" ]]; then
+    ROOT_CLAUDE="$CWD/CLAUDE.md"
+    REL_TARGET="${TARGET_DIR#./}"
+    REL_TARGET="${REL_TARGET%/}"
+    if [[ -f "$ROOT_CLAUDE" ]]; then
+        if ! grep -Fq "$PROTOCOL_HEADING" "$ROOT_CLAUDE" && ! grep -Fq "$LEGACY_PROTOCOL_HEADING" "$ROOT_CLAUDE"; then
+            cat >> "$ROOT_CLAUDE" <<EOF
+
+## Daily Watchlist
+
+Installed under \`$REL_TARGET/\`. For Daily Watchlist requests, prefer /dw-today and /dw-import.
+
+Workspace-level instructions (read these first when handling /dw-*):
+- $REL_TARGET/CLAUDE.md
+- $REL_TARGET/.claude/skills/daily-watchlist-today.md
+- $REL_TARGET/.claude/skills/daily-watchlist-import.md
+- $REL_TARGET/config/daily-watchlist.yaml
+- $REL_TARGET/config/daily-watchlist-watchlist.md
+
+Reports are written to $REL_TARGET/daily-watchlist-reports/YYYY-MM/.
+EOF
+            echo "OK Added Daily Watchlist pointer to project-root CLAUDE.md"
+        fi
+    fi
 fi
 
 # --- Install Python dependencies ---

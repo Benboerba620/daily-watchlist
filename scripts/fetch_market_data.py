@@ -597,49 +597,195 @@ def fetch_profile(ticker: str, api_key: str) -> list[dict[str, Any]]:
     return []
 
 
-def classify_market_cap(mkt_cap: Any) -> str:
-    if not isinstance(mkt_cap, (int, float)):
+def classify_market_cap(mkt_cap: Any, country: str = "US") -> str:
+    if not isinstance(mkt_cap, (int, float)) or mkt_cap <= 0:
         return ""
-    if mkt_cap > 10_000_000_000:
+    # USD thresholds; CN/HK tickers report in CNY/HKD so scale by ~7.
+    scale = 7 if country.upper() in ("CN", "HK") else 1
+    large = 10_000_000_000 * scale
+    mid = 2_000_000_000 * scale
+    if mkt_cap > large:
         return "Large"
-    if mkt_cap > 2_000_000_000:
+    if mkt_cap > mid:
         return "Mid"
     return "Small"
 
 
 def normalize_profile(raw: dict[str, Any], requested_ticker: str) -> dict[str, Any]:
+    country = raw.get("country", "") or ""
+    mkt_cap = raw.get("mktCap", 0)
     return {
         "ticker": raw.get("symbol", requested_ticker),
         "name": raw.get("companyName", ""),
         "sector": raw.get("sector", "Unknown"),
         "industry": raw.get("industry", ""),
-        "market_cap": raw.get("mktCap", 0),
-        "cap_label": classify_market_cap(raw.get("mktCap")),
+        "market_cap": mkt_cap,
+        "cap_label": classify_market_cap(mkt_cap, country),
         "exchange": raw.get("exchangeShortName", ""),
-        "country": raw.get("country", ""),
+        "country": country,
     }
 
 
-def fetch_profiles(tickers: list[str], api_key: str, max_workers: int) -> list[dict[str, Any]]:
-    if not api_key:
-        raise RuntimeError("FMP_API_KEY is required for --profile mode")
+def fetch_tushare_profile(client: Any, ticker: str) -> dict[str, Any] | None:
+    """Fetch profile for A-share (.SH/.SZ) or HK (.HK) via Tushare.
+
+    FMP coverage for Chinese onshore equities is incomplete (e.g. 601857.SH),
+    and Tushare is the authoritative source even when FMP happens to return
+    data for a given A-share ticker.
+    """
+    try:
+        if ticker.endswith(CN_SUFFIXES):
+            frame = client.stock_basic(
+                ts_code=ticker,
+                fields="ts_code,name,area,industry,market,fullname",
+            )
+            if frame is None or frame.empty:
+                return None
+            row = frame.iloc[0]
+            name = str(row.get("name", "") or "")
+            industry = str(row.get("industry", "") or "")
+            exchange = "SHA" if ticker.endswith(".SH") else "SHZ"
+            country = "CN"
+        elif ticker.endswith(HK_SUFFIX):
+            frame = client.hk_basic(ts_code=ticker, fields="ts_code,name,fullname")
+            if frame is None or frame.empty:
+                return None
+            row = frame.iloc[0]
+            name = str(row.get("name", "") or "")
+            industry = ""
+            exchange = "HKG"
+            country = "HK"
+        else:
+            return None
+    except Exception as exc:  # noqa: BLE001
+        log(f"Warning: tushare profile request failed for {ticker}: {exc}")
+        return None
+
+    market_cap = 0.0
+    if ticker.endswith(CN_SUFFIXES):
+        try:
+            end_date = date.today()
+            start_date = end_date - timedelta(days=14)
+            mv_frame = client.daily_basic(
+                ts_code=ticker,
+                start_date=start_date.strftime("%Y%m%d"),
+                end_date=end_date.strftime("%Y%m%d"),
+                fields="ts_code,trade_date,total_mv",
+            )
+            if mv_frame is not None and not mv_frame.empty:
+                latest = mv_frame.sort_values("trade_date", ascending=False).iloc[0]
+                total_mv_wan = parse_float(latest.get("total_mv"))
+                if total_mv_wan is not None:
+                    market_cap = total_mv_wan * 10_000  # 万元 → 元
+        except Exception as exc:  # noqa: BLE001
+            log(f"Warning: tushare daily_basic failed for {ticker}: {exc}")
+
+    return {
+        "ticker": ticker,
+        "name": name,
+        "sector": industry or ("Hong Kong" if country == "HK" else "A-Share"),
+        "industry": industry,
+        "market_cap": market_cap,
+        "cap_label": classify_market_cap(market_cap, country),
+        "exchange": exchange,
+        "country": country,
+    }
+
+
+def fetch_profiles(
+    tickers: list[str], api_key: str, tushare_token: str, max_workers: int
+) -> list[dict[str, Any]]:
     if not tickers:
         return []
 
+    tushare_tickers = [
+        t for t in tickers if t.endswith(CN_SUFFIXES) or t.endswith(HK_SUFFIX)
+    ]
+    fmp_tickers = [t for t in tickers if t not in tushare_tickers]
+
+    if fmp_tickers and not api_key:
+        raise RuntimeError(
+            "FMP_API_KEY is required for --profile mode (non-A-share / non-HK tickers)"
+        )
+
     profiles: list[dict[str, Any]] = []
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(tickers))) as executor:
-        futures = {executor.submit(fetch_profile, ticker, api_key): ticker for ticker in tickers}
-        for future in as_completed(futures):
-            ticker = futures[future]
-            try:
-                raw_list = future.result()
-                if raw_list:
-                    profiles.append(normalize_profile(raw_list[0], ticker))
-                else:
-                    profiles.append({"ticker": ticker, "name": "", "sector": "Unrecognized", "error": "Not found in FMP"})
-            except Exception as exc:  # noqa: BLE001
-                log(f"Warning: failed to fetch profile for {ticker}: {exc}")
-                profiles.append({"ticker": ticker, "name": "", "sector": "Unrecognized", "error": str(exc)})
+
+    if fmp_tickers:
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(fmp_tickers))) as executor:
+            futures = {
+                executor.submit(fetch_profile, ticker, api_key): ticker
+                for ticker in fmp_tickers
+            }
+            for future in as_completed(futures):
+                ticker = futures[future]
+                try:
+                    raw_list = future.result()
+                    if raw_list:
+                        profiles.append(normalize_profile(raw_list[0], ticker))
+                    else:
+                        profiles.append(
+                            {
+                                "ticker": ticker,
+                                "name": "",
+                                "sector": "Unrecognized",
+                                "error": "Not found in FMP",
+                            }
+                        )
+                except Exception as exc:  # noqa: BLE001
+                    log(f"Warning: failed to fetch profile for {ticker}: {exc}")
+                    profiles.append(
+                        {
+                            "ticker": ticker,
+                            "name": "",
+                            "sector": "Unrecognized",
+                            "error": str(exc),
+                        }
+                    )
+
+    if tushare_tickers:
+        client = load_tushare_client(tushare_token) if tushare_token else None
+        if client is None:
+            for ticker in tushare_tickers:
+                profiles.append(
+                    {
+                        "ticker": ticker,
+                        "name": "",
+                        "sector": "Unrecognized",
+                        "error": "TUSHARE_TOKEN not set or tushare not installed",
+                    }
+                )
+        else:
+            with ThreadPoolExecutor(max_workers=min(max_workers, len(tushare_tickers))) as executor:
+                futures = {
+                    executor.submit(fetch_tushare_profile, client, ticker): ticker
+                    for ticker in tushare_tickers
+                }
+                for future in as_completed(futures):
+                    ticker = futures[future]
+                    try:
+                        profile = future.result()
+                        if profile:
+                            profiles.append(profile)
+                        else:
+                            profiles.append(
+                                {
+                                    "ticker": ticker,
+                                    "name": "",
+                                    "sector": "Unrecognized",
+                                    "error": "Not found in Tushare",
+                                }
+                            )
+                    except Exception as exc:  # noqa: BLE001
+                        log(f"Warning: failed to fetch tushare profile for {ticker}: {exc}")
+                        profiles.append(
+                            {
+                                "ticker": ticker,
+                                "name": "",
+                                "sector": "Unrecognized",
+                                "error": str(exc),
+                            }
+                        )
+
     return sorted(profiles, key=lambda item: str(item.get("ticker", "")))
 
 
@@ -782,7 +928,11 @@ def main() -> int:
     try:
         if args.profile:
             tickers = parse_requested_tickers(args.profile)
-            payload = {"profiles": fetch_profiles(tickers, api_key, max(args.max_workers, 1))}
+            payload = {
+                "profiles": fetch_profiles(
+                    tickers, api_key, tushare_token, max(args.max_workers, 1)
+                )
+            }
         else:
             watchlist = parse_watchlist(resolve_watchlist_path(config_dir))
             payload = build_snapshot(

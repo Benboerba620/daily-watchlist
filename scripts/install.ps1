@@ -34,6 +34,24 @@ $RootClaudeLines = @(
     ""
 ) + $ProtocolLines
 
+function Get-RootPointerLines {
+    param([string]$RelTarget)
+    return @(
+        "## Daily Watchlist",
+        "",
+        "Installed under ``$RelTarget/``. For Daily Watchlist requests, prefer /dw-today and /dw-import.",
+        "",
+        "Workspace-level instructions (read these first when handling /dw-*):",
+        "- $RelTarget/CLAUDE.md",
+        "- $RelTarget/.claude/skills/daily-watchlist-today.md",
+        "- $RelTarget/.claude/skills/daily-watchlist-import.md",
+        "- $RelTarget/config/daily-watchlist.yaml",
+        "- $RelTarget/config/daily-watchlist-watchlist.md",
+        "",
+        "Reports are written to $RelTarget/daily-watchlist-reports/YYYY-MM/."
+    )
+}
+
 function Copy-IfNeeded {
     param(
         [string]$Source,
@@ -118,7 +136,7 @@ Copy-IfNeeded (Join-Path $RepoDir "config\daily-watchlist.env.example") (Join-Pa
 Copy-IfNeeded (Join-Path $RepoDir "config\daily-watchlist.example.yaml") (Join-Path $TargetDir "config\daily-watchlist.yaml")
 Copy-IfNeeded (Join-Path $RepoDir "config\daily-watchlist.watchlist.example.md") (Join-Path $TargetDir "config\daily-watchlist-watchlist.md")
 
-# --- CLAUDE.md integration (lightweight entry, no full protocol copy) ---
+# --- Workspace-level CLAUDE.md (always written inside $TargetDir) ---
 $targetClaude = Join-Path $TargetDir "CLAUDE.md"
 if (-not (Test-Path $targetClaude)) {
     Set-Content -Path $targetClaude -Value ($RootClaudeLines -join "`r`n") -Encoding utf8
@@ -134,6 +152,30 @@ if (-not (Test-Path $targetClaude)) {
         }
         $content += ($ProtocolLines -join "`r`n")
         Set-Content -Path $targetClaude -Value $content -Encoding utf8
+    }
+}
+
+# --- Project-root CLAUDE.md pointer (only if TargetDir is a subdirectory of cwd) ---
+$cwd = (Get-Location).Path
+$absTarget = (Resolve-Path -LiteralPath $TargetDir -ErrorAction SilentlyContinue).Path
+if ($absTarget -and ($absTarget -ne $cwd)) {
+    $rootClaude = Join-Path $cwd "CLAUDE.md"
+    $relTarget = $TargetDir -replace "^\.[\\/]", "" -replace "\\", "/"
+    $relTarget = $relTarget.TrimEnd("/")
+    if (Test-Path $rootClaude) {
+        $rootContent = Get-Content $rootClaude -Raw
+        if (
+            ($rootContent -notmatch [regex]::Escape($ProtocolHeading)) -and
+            ($rootContent -notmatch [regex]::Escape($LegacyProtocolHeading))
+        ) {
+            $content = $rootContent.TrimEnd()
+            if ($content) {
+                $content += "`r`n`r`n"
+            }
+            $content += ((Get-RootPointerLines -RelTarget $relTarget) -join "`r`n")
+            Set-Content -Path $rootClaude -Value $content -Encoding utf8
+            Write-Host "OK Added Daily Watchlist pointer to project-root CLAUDE.md" -ForegroundColor Green
+        }
     }
 }
 
