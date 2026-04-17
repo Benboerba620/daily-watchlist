@@ -111,6 +111,10 @@ jobs:
           python -c "import dotenv; print('python-dotenv OK')"
           python -c "import yaml; print('pyyaml OK')"
 
+      - name: Run fallback unit tests
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+
       - name: Verify check_setup.py runs (expect fail without API key)
         shell: bash
         run: |

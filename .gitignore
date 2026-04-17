@@ -30,3 +30,6 @@ Thumbs.db
 
 # Codex temp
 .codex-prompt-*.md
+
+# Sync-drive conflict copies
+*_冲突文件_*

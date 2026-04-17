@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, timedelta
 from io import StringIO
 from pathlib import Path
+from threading import Lock
 from typing import Any, Iterable
 
 import requests
@@ -31,6 +32,8 @@ DEFAULT_THRESHOLDS = {
 WATCHLIST_COLUMNS = ("ticker", "name", "market", "market cap", "category")
 CN_SUFFIXES = (".SH", ".SZ")
 HK_SUFFIX = ".HK"
+YFINANCE_IMPORT_WARNING_LOCK = Lock()
+_YFINANCE_IMPORT_WARNING_EMITTED = False
 
 
 def configure_stdio() -> None:
@@ -394,6 +397,14 @@ def fetch_yfinance_quote(ticker: str) -> dict[str, Any] | None:
     try:
         import yfinance as yf  # type: ignore
     except ImportError:
+        global _YFINANCE_IMPORT_WARNING_EMITTED
+        with YFINANCE_IMPORT_WARNING_LOCK:
+            if not _YFINANCE_IMPORT_WARNING_EMITTED:
+                log(
+                    "Warning: ENABLE_YFINANCE is set but yfinance is not installed; "
+                    "run `pip install yfinance` or disable ENABLE_YFINANCE"
+                )
+                _YFINANCE_IMPORT_WARNING_EMITTED = True
         return None
     try:
         hist = yf.Ticker(ticker).history(period="5d", auto_adjust=False)
