@@ -79,8 +79,11 @@ cp "$REPO_DIR/scripts/fetch_macro_data.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/check_setup.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/workspace_paths.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/templates/daily-watchlist-report-template.md" "$TARGET_DIR/templates/"
-cp "$REPO_DIR/skills/daily-watchlist-today.md" "$TARGET_DIR/.claude/skills/"
-cp "$REPO_DIR/skills/daily-watchlist-import.md" "$TARGET_DIR/.claude/skills/"
+# Remove legacy filenames from prior installs (pre-1.0.4 rename)
+rm -f "$TARGET_DIR/.claude/skills/daily-watchlist-today.md"
+rm -f "$TARGET_DIR/.claude/skills/daily-watchlist-import.md"
+cp "$REPO_DIR/skills/dw-today.md" "$TARGET_DIR/.claude/skills/"
+cp "$REPO_DIR/skills/dw-import.md" "$TARGET_DIR/.claude/skills/"
 
 # --- Copy config files (working copies only, no .example duplicates) ---
 copy_if_needed "$REPO_DIR/config/daily-watchlist.env.example" "$TARGET_DIR/config/daily-watchlist.env"
@@ -100,8 +103,8 @@ if [[ ! -f "$TARGET_DIR/CLAUDE.md" ]]; then
 For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
 
 Read these first:
-- `./.claude/skills/daily-watchlist-today.md`
-- `./.claude/skills/daily-watchlist-import.md`
+- `./.claude/skills/dw-today.md`
+- `./.claude/skills/dw-import.md`
 - `./config/daily-watchlist.yaml`
 - `./config/daily-watchlist-watchlist.md`
 - `./templates/daily-watchlist-report-template.md`
@@ -116,8 +119,8 @@ elif ! grep -Fq "$PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md" && ! grep -Fq "$LEGA
 For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
 
 Read these first:
-- `./.claude/skills/daily-watchlist-today.md`
-- `./.claude/skills/daily-watchlist-import.md`
+- `./.claude/skills/dw-today.md`
+- `./.claude/skills/dw-import.md`
 - `./config/daily-watchlist.yaml`
 - `./config/daily-watchlist-watchlist.md`
 - `./templates/daily-watchlist-report-template.md`
@@ -126,10 +129,11 @@ Write reports to `./daily-watchlist-reports/YYYY-MM/`.
 EOF
 fi
 
-# --- Project-root CLAUDE.md pointer (only if TARGET_DIR is a subdirectory of cwd) ---
+# --- Project-root CLAUDE.md pointer (only if TARGET_DIR is strictly under cwd) ---
 CWD="$(pwd)"
 ABS_TARGET="$(cd "$TARGET_DIR" 2>/dev/null && pwd || echo "")"
-if [[ -n "$ABS_TARGET" && "$ABS_TARGET" != "$CWD" ]]; then
+# Trailing slash guard avoids prefix collisions (e.g. /foo/bar vs /foo/barbaz)
+if [[ -n "$ABS_TARGET" && "$ABS_TARGET" != "$CWD" && "${ABS_TARGET}/" == "${CWD}/"* ]]; then
     ROOT_CLAUDE="$CWD/CLAUDE.md"
     REL_TARGET="${TARGET_DIR#./}"
     REL_TARGET="${REL_TARGET%/}"
@@ -143,8 +147,8 @@ Installed under \`$REL_TARGET/\`. For Daily Watchlist requests, prefer /dw-today
 
 Workspace-level instructions (read these first when handling /dw-*):
 - $REL_TARGET/CLAUDE.md
-- $REL_TARGET/.claude/skills/daily-watchlist-today.md
-- $REL_TARGET/.claude/skills/daily-watchlist-import.md
+- $REL_TARGET/.claude/skills/dw-today.md
+- $REL_TARGET/.claude/skills/dw-import.md
 - $REL_TARGET/config/daily-watchlist.yaml
 - $REL_TARGET/config/daily-watchlist-watchlist.md
 

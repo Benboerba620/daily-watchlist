@@ -199,8 +199,8 @@ pip install -r requirements.txt
    │   └── daily-watchlist-report-template.md
    └── .claude/
        └── skills/
-           ├── daily-watchlist-today.md
-           └── daily-watchlist-import.md
+           ├── dw-today.md
+           └── dw-import.md
    ```
 3. 在 `my-investment/CLAUDE.md` 里写入（让 Claude Code 找到 skills）：
    ```markdown
@@ -211,8 +211,8 @@ pip install -r requirements.txt
    For Daily Watchlist requests, prefer /dw-today and /dw-import.
 
    Read these first:
-   - ./.claude/skills/daily-watchlist-today.md
-   - ./.claude/skills/daily-watchlist-import.md
+   - ./.claude/skills/dw-today.md
+   - ./.claude/skills/dw-import.md
    - ./config/daily-watchlist.yaml
    - ./config/daily-watchlist-watchlist.md
    ```
@@ -544,8 +544,8 @@ Then manually:
    │   └── daily-watchlist-report-template.md
    └── .claude/
        └── skills/
-           ├── daily-watchlist-today.md
-           └── daily-watchlist-import.md
+           ├── dw-today.md
+           └── dw-import.md
    ```
 3. Write to `my-investment/CLAUDE.md` so Claude Code finds the skills:
    ```markdown
@@ -556,8 +556,8 @@ Then manually:
    For Daily Watchlist requests, prefer /dw-today and /dw-import.
 
    Read these first:
-   - ./.claude/skills/daily-watchlist-today.md
-   - ./.claude/skills/daily-watchlist-import.md
+   - ./.claude/skills/dw-today.md
+   - ./.claude/skills/dw-import.md
    - ./config/daily-watchlist.yaml
    - ./config/daily-watchlist-watchlist.md
    ```

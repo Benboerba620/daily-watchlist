@@ -52,8 +52,8 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 
 安装器还会写入：
 
-- `.claude/skills/daily-watchlist-today.md`
-- `.claude/skills/daily-watchlist-import.md`
+- `.claude/skills/dw-today.md`
+- `.claude/skills/dw-import.md`
 - `templates/daily-watchlist-report-template.md`
 
 其中模板文件是默认输出格式。要明确告诉用户：之后可以随时自行编辑。

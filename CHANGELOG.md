@@ -2,6 +2,15 @@
 
 这里记录 `daily-watchlist` 的重要更新。版本号使用语义化版本（SemVer），发布在 [GitHub Releases](https://github.com/Benboerba620/daily-watchlist/releases)。
 
+## [Unreleased]
+
+### 修复
+
+- **Skill 文件重命名**：`skills/daily-watchlist-today.md` → `skills/dw-today.md`，`skills/daily-watchlist-import.md` → `skills/dw-import.md`。Claude Code 的 skill 触发名等于文件名（去掉 `.md`），原文件名只能触发 `/daily-watchlist-today`，README/CLAUDE.md 却全篇推 `/dw-today`——实际根本不存在。重命名后文件名与触发词对齐
+- **Installer 自动清理旧文件**：`install.sh` / `install.ps1` 运行时会移除目标目录里遗留的 `daily-watchlist-today.md` / `daily-watchlist-import.md`，避免升级老安装后出现两份同功能 skill
+- **Installer CLAUDE.md pointer guard 收紧**：之前判断"`TargetDir != cwd` 就往 `cwd/CLAUDE.md` 追加 pointer 段"，在 target 与 cwd 是兄弟目录时会错误地污染 cwd 里不相关的 CLAUDE.md。改为"target 必须严格是 cwd 子目录"才触发
+- **同步更新所有文档引用**：`README.md`、`INSTALL-FOR-AI.md`、`CLAUDE.md`、`.github/workflows/{install-test,release}.yml` 全部改到新文件名；`scripts/workspace_paths.py` 的 `SKILL_FILE_CANDIDATES` 把新名排首位、老名保留作后向兼容
+
 ## [1.0.3] - 2026-04-17
 
 ### 文档

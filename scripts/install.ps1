@@ -21,8 +21,8 @@ $ProtocolLines = @(
     "For Daily Watchlist requests, prefer /dw-today and /dw-import.",
     "",
     "Read these first:",
-    "- ./.claude/skills/daily-watchlist-today.md",
-    "- ./.claude/skills/daily-watchlist-import.md",
+    "- ./.claude/skills/dw-today.md",
+    "- ./.claude/skills/dw-import.md",
     "- ./config/daily-watchlist.yaml",
     "- ./config/daily-watchlist-watchlist.md",
     "- ./templates/daily-watchlist-report-template.md",
@@ -43,8 +43,8 @@ function Get-RootPointerLines {
         "",
         "Workspace-level instructions (read these first when handling /dw-*):",
         "- $RelTarget/CLAUDE.md",
-        "- $RelTarget/.claude/skills/daily-watchlist-today.md",
-        "- $RelTarget/.claude/skills/daily-watchlist-import.md",
+        "- $RelTarget/.claude/skills/dw-today.md",
+        "- $RelTarget/.claude/skills/dw-import.md",
         "- $RelTarget/config/daily-watchlist.yaml",
         "- $RelTarget/config/daily-watchlist-watchlist.md",
         "",
@@ -126,7 +126,16 @@ foreach ($s in $scripts) {
 
 Copy-Item (Join-Path $RepoDir "templates\daily-watchlist-report-template.md") (Join-Path $TargetDir "templates\daily-watchlist-report-template.md") -Force
 
-$skills = @("daily-watchlist-today.md", "daily-watchlist-import.md")
+# Remove legacy filenames from prior installs (pre-1.0.4 rename)
+$legacySkills = @("daily-watchlist-today.md", "daily-watchlist-import.md")
+foreach ($s in $legacySkills) {
+    $legacyPath = Join-Path $TargetDir ".claude\skills\$s"
+    if (Test-Path $legacyPath) {
+        Remove-Item -LiteralPath $legacyPath -Force
+    }
+}
+
+$skills = @("dw-today.md", "dw-import.md")
 foreach ($s in $skills) {
     Copy-Item (Join-Path $RepoDir "skills\$s") (Join-Path $TargetDir ".claude\skills\$s") -Force
 }
@@ -155,10 +164,13 @@ if (-not (Test-Path $targetClaude)) {
     }
 }
 
-# --- Project-root CLAUDE.md pointer (only if TargetDir is a subdirectory of cwd) ---
+# --- Project-root CLAUDE.md pointer (only if TargetDir is strictly under cwd) ---
 $cwd = (Get-Location).Path
 $absTarget = (Resolve-Path -LiteralPath $TargetDir -ErrorAction SilentlyContinue).Path
-if ($absTarget -and ($absTarget -ne $cwd)) {
+# Trailing-sep guard avoids prefix collisions (e.g. C:\foo\bar vs C:\foo\barbaz)
+$cwdWithSep = $cwd.TrimEnd('\','/') + [System.IO.Path]::DirectorySeparatorChar
+$absTargetWithSep = if ($absTarget) { $absTarget.TrimEnd('\','/') + [System.IO.Path]::DirectorySeparatorChar } else { "" }
+if ($absTarget -and ($absTarget -ne $cwd) -and $absTargetWithSep.StartsWith($cwdWithSep, [System.StringComparison]::OrdinalIgnoreCase)) {
     $rootClaude = Join-Path $cwd "CLAUDE.md"
     $relTarget = $TargetDir -replace "^\.[\\/]", "" -replace "\\", "/"
     $relTarget = $relTarget.TrimEnd("/")

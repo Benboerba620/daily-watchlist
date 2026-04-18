@@ -27,6 +27,8 @@ TEMPLATE_FILE_CANDIDATES = (
 )
 
 SKILL_FILE_CANDIDATES = (
+    "dw-today.md",
+    "dw-import.md",
     "daily-watchlist-today.md",
     "daily-watchlist-import.md",
 )
