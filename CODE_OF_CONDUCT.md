@@ -1,5 +1,5 @@
-# Code of Conduct
+# 行为准则
 
-Be respectful, concrete, and constructive.
+友善、具体、有建设性。
 
-Use GitHub Issues or Discussions for project-related problems.
+项目相关的问题或讨论请通过 GitHub Issues 或 Discussions 发起。

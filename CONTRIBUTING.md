@@ -1,31 +1,31 @@
-# Contributing
+# 贡献指南
 
-## Ground rules
+## 基本原则
 
-- Keep changes small and scoped
-- Preserve backward compatibility when possible
-- Prefer namespaced files over generic filenames
-- Run `python scripts/check_setup.py` before submitting changes
-- For script changes, also run a real install test in a clean directory
+- 改动控制在小范围内，边界清晰
+- 尽可能保持向后兼容
+- 文件命名优先使用命名空间前缀，避免通用名
+- 提交前跑 `python scripts/check_setup.py`
+- 涉及脚本改动的，在干净目录里做一次完整安装测试
 
-## Good contributions
+## 欢迎的贡献
 
-- bug fixes
-- install and merge improvements
-- documentation cleanup
-- new data source adapters that keep the project free-tier friendly
+- bug 修复
+- 安装和合并流程改进
+- 文档整理
+- 新的数据源适配器（保持项目的免费可用性）
 
-## Out of scope
+## 不在范围内
 
-- trade execution
-- GUI-only features
-- paid-only integrations as the default path
+- 交易执行
+- 纯 GUI 功能
+- 默认路径依赖付费服务的集成
 
-## Releases
+## 发版流程
 
-- Update `VERSION`, `CHANGELOG.md`, and any user-facing docs that mention the release number
-- Commit the release on `main`
-- Create an annotated tag such as `git tag -a v1.0.1 -m "Release v1.0.1"`
-- Push `main` and the tag: `git push origin main && git push origin v1.0.1`
-- The GitHub Actions `Release` workflow validates the scripts and creates or updates the GitHub release from `CHANGELOG.md`
-- If needed, run the workflow manually with `workflow_dispatch` and provide an existing tag
+- 更新 `VERSION`、`CHANGELOG.md` 以及用户文档里提到版本号的地方
+- 在 `main` 上提交发版 commit
+- 打 annotated tag，例如 `git tag -a v1.0.1 -m "Release v1.0.1"`
+- 推送 main 和 tag：`git push origin main && git push origin v1.0.1`
+- GitHub Actions 的 `Release` workflow 会验证脚本，并基于 `CHANGELOG.md` 创建或更新 GitHub Release
+- 如有需要，可以用 `workflow_dispatch` 手动触发 workflow，提供已有的 tag
