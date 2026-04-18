@@ -1,41 +1,41 @@
-# Daily Watchlist
+# 每日监控池
 
-## Technology
-| Ticker | Name | Market | Market Cap | Category |
-|--------|------|--------|------------|----------|
-| AAPL | Apple Inc | US | Large | Technology |
-| MSFT | Microsoft Corp | US | Large | Technology |
-| NVDA | NVIDIA Corp | US | Large | Technology |
-| GOOGL | Alphabet Inc | US | Large | Technology |
+## 科技
+| 代码 | 名称 | 市场 | 市值级别 | 分类 |
+|------|------|------|----------|------|
+| AAPL | 苹果 | 美股 | 大型 | 科技 |
+| MSFT | 微软 | 美股 | 大型 | 科技 |
+| NVDA | 英伟达 | 美股 | 大型 | 科技 |
+| GOOGL | Alphabet | 美股 | 大型 | 科技 |
 
-## Healthcare
-| Ticker | Name | Market | Market Cap | Category |
-|--------|------|--------|------------|----------|
-| UNH | UnitedHealth Group | US | Large | Healthcare |
-| JNJ | Johnson & Johnson | US | Large | Healthcare |
-| LLY | Eli Lilly | US | Large | Healthcare |
-| ABBV | AbbVie Inc | US | Large | Healthcare |
+## 医疗健康
+| 代码 | 名称 | 市场 | 市值级别 | 分类 |
+|------|------|------|----------|------|
+| UNH | 联合健康 | 美股 | 大型 | 医疗健康 |
+| JNJ | 强生 | 美股 | 大型 | 医疗健康 |
+| LLY | 礼来 | 美股 | 大型 | 医疗健康 |
+| ABBV | 艾伯维 | 美股 | 大型 | 医疗健康 |
 
-## Energy
-| Ticker | Name | Market | Market Cap | Category |
-|--------|------|--------|------------|----------|
-| XOM | Exxon Mobil | US | Large | Energy |
-| CVX | Chevron Corp | US | Large | Energy |
-| COP | ConocoPhillips | US | Large | Energy |
-| SLB | Schlumberger | US | Large | Energy |
+## 能源
+| 代码 | 名称 | 市场 | 市值级别 | 分类 |
+|------|------|------|----------|------|
+| XOM | 埃克森美孚 | 美股 | 大型 | 能源 |
+| CVX | 雪佛龙 | 美股 | 大型 | 能源 |
+| COP | 康菲石油 | 美股 | 大型 | 能源 |
+| SLB | 斯伦贝谢 | 美股 | 大型 | 能源 |
 
-## Financials
-| Ticker | Name | Market | Market Cap | Category |
-|--------|------|--------|------------|----------|
-| JPM | JPMorgan Chase | US | Large | Financials |
-| BAC | Bank of America | US | Large | Financials |
-| GS | Goldman Sachs | US | Large | Financials |
-| BRK-B | Berkshire Hathaway | US | Large | Financials |
+## 金融
+| 代码 | 名称 | 市场 | 市值级别 | 分类 |
+|------|------|------|----------|------|
+| JPM | 摩根大通 | 美股 | 大型 | 金融 |
+| BAC | 美国银行 | 美股 | 大型 | 金融 |
+| GS | 高盛 | 美股 | 大型 | 金融 |
+| BRK-B | 伯克希尔哈撒韦 | 美股 | 大型 | 金融 |
 
-## Consumer
-| Ticker | Name | Market | Market Cap | Category |
-|--------|------|--------|------------|----------|
-| AMZN | Amazon.com | US | Large | Consumer |
-| TSLA | Tesla Inc | US | Large | Consumer |
-| HD | Home Depot | US | Large | Consumer |
-| COST | Costco Wholesale | US | Large | Consumer |
+## 消费
+| 代码 | 名称 | 市场 | 市值级别 | 分类 |
+|------|------|------|----------|------|
+| AMZN | 亚马逊 | 美股 | 大型 | 消费 |
+| TSLA | 特斯拉 | 美股 | 大型 | 消费 |
+| HD | 家得宝 | 美股 | 大型 | 消费 |
+| COST | 好市多 | 美股 | 大型 | 消费 |

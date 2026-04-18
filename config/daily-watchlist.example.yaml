@@ -1,7 +1,7 @@
-# Daily Watchlist configuration
-# Copy this file to daily-watchlist.yaml and customize it for your workflow.
+# Daily Watchlist 配置
+# 可直接在此文件中按你的工作流调整默认行为。
 
-market: us  # us / cn / hk / mixed
+market: mixed  # us / cn / hk / mixed
 
 modules:
   macro: true
@@ -10,8 +10,8 @@ modules:
   wiki: auto
 
 reporting:
-  model_profile: default   # default / domestic
-  secondary_verify: false  # set true if using a domestic model
+  model_profile: domestic  # default / domestic
+  secondary_verify: true   # 使用国内模型时建议开启
   theme_min_score: 3
   theme_min_hits: 2
 
@@ -20,18 +20,7 @@ thresholds:
   small_cap_move: 7
 
 focus_areas:
-  - name: "AI & Data Center"
-    keywords: ["AI", "data center", "GPU", "inference"]
-    # required_any: search results must contain at least one of these to be included
-    required_any: ["data center", "GPU", "inference"]
-    # exclude: search results with these words in title/summary are discarded
+  - name: "AI 与数据中心"
+    keywords: ["AI", "data center", "GPU", "inference", "LLM", "算力", "大模型"]
+    required_any: ["AI", "data center", "GPU", "inference", "LLM", "算力", "大模型"]
     exclude: ["airline", "ceasefire", "military"]
-  - name: "Clean Energy"
-    keywords: ["solar", "wind", "nuclear", "grid"]
-    required_any: ["solar", "wind", "nuclear", "grid"]
-    exclude: ["airline", "ceasefire", "military"]
-  # Add your own:
-  # - name: "Shipping"
-  #   keywords: ["tanker", "VLCC", "dry bulk"]
-  #   required_any: ["tanker", "VLCC", "dry bulk"]
-  #   exclude: []
