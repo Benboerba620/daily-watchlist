@@ -5,6 +5,8 @@ This file is the source protocol for the Daily Watchlist workflow.
 The installer does not copy this file wholesale into the target workspace.
 Instead, it appends a short `CLAUDE.md` hint that points Claude Code to:
 
+- `./.claude/commands/dw-today.md`
+- `./.claude/commands/dw-import.md`
 - `./.claude/skills/dw-today.md`
 - `./.claude/skills/dw-import.md`
 - `./config/daily-watchlist.yaml`

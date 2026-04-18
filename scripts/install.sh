@@ -70,6 +70,7 @@ mkdir -p \
     "$TARGET_DIR/scripts" \
     "$TARGET_DIR/templates" \
     "$TARGET_DIR/daily-watchlist-reports" \
+    "$TARGET_DIR/.claude/commands" \
     "$TARGET_DIR/.claude/skills"
 
 # --- Copy script files ---
@@ -82,6 +83,10 @@ cp "$REPO_DIR/templates/daily-watchlist-report-template.md" "$TARGET_DIR/templat
 # Remove legacy filenames from prior installs (pre-1.0.4 rename)
 rm -f "$TARGET_DIR/.claude/skills/daily-watchlist-today.md"
 rm -f "$TARGET_DIR/.claude/skills/daily-watchlist-import.md"
+rm -f "$TARGET_DIR/.claude/commands/daily-watchlist-today.md"
+rm -f "$TARGET_DIR/.claude/commands/daily-watchlist-import.md"
+cp "$REPO_DIR/.claude/commands/dw-today.md" "$TARGET_DIR/.claude/commands/"
+cp "$REPO_DIR/.claude/commands/dw-import.md" "$TARGET_DIR/.claude/commands/"
 cp "$REPO_DIR/skills/dw-today.md" "$TARGET_DIR/.claude/skills/"
 cp "$REPO_DIR/skills/dw-import.md" "$TARGET_DIR/.claude/skills/"
 
@@ -103,6 +108,8 @@ if [[ ! -f "$TARGET_DIR/CLAUDE.md" ]]; then
 For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
 
 Read these first:
+- `./.claude/commands/dw-today.md`
+- `./.claude/commands/dw-import.md`
 - `./.claude/skills/dw-today.md`
 - `./.claude/skills/dw-import.md`
 - `./config/daily-watchlist.yaml`
@@ -119,6 +126,8 @@ elif ! grep -Fq "$PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md" && ! grep -Fq "$LEGA
 For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
 
 Read these first:
+- `./.claude/commands/dw-today.md`
+- `./.claude/commands/dw-import.md`
 - `./.claude/skills/dw-today.md`
 - `./.claude/skills/dw-import.md`
 - `./config/daily-watchlist.yaml`
@@ -147,6 +156,8 @@ Installed under \`$REL_TARGET/\`. For Daily Watchlist requests, prefer /dw-today
 
 Workspace-level instructions (read these first when handling /dw-*):
 - $REL_TARGET/CLAUDE.md
+- $REL_TARGET/.claude/commands/dw-today.md
+- $REL_TARGET/.claude/commands/dw-import.md
 - $REL_TARGET/.claude/skills/dw-today.md
 - $REL_TARGET/.claude/skills/dw-import.md
 - $REL_TARGET/config/daily-watchlist.yaml

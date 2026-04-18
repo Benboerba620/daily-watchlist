@@ -21,6 +21,8 @@ $ProtocolLines = @(
     "For Daily Watchlist requests, prefer /dw-today and /dw-import.",
     "",
     "Read these first:",
+    "- ./.claude/commands/dw-today.md",
+    "- ./.claude/commands/dw-import.md",
     "- ./.claude/skills/dw-today.md",
     "- ./.claude/skills/dw-import.md",
     "- ./config/daily-watchlist.yaml",
@@ -43,6 +45,8 @@ function Get-RootPointerLines {
         "",
         "Workspace-level instructions (read these first when handling /dw-*):",
         "- $RelTarget/CLAUDE.md",
+        "- $RelTarget/.claude/commands/dw-today.md",
+        "- $RelTarget/.claude/commands/dw-import.md",
         "- $RelTarget/.claude/skills/dw-today.md",
         "- $RelTarget/.claude/skills/dw-import.md",
         "- $RelTarget/config/daily-watchlist.yaml",
@@ -103,6 +107,7 @@ $dirs = @(
     "templates",
     "daily-watchlist-reports",
     ".claude",
+    ".claude\commands",
     ".claude\skills"
 )
 foreach ($d in $dirs) {
@@ -135,9 +140,22 @@ foreach ($s in $legacySkills) {
     }
 }
 
+$legacyCommands = @("daily-watchlist-today.md", "daily-watchlist-import.md")
+foreach ($c in $legacyCommands) {
+    $legacyPath = Join-Path $TargetDir ".claude\commands\$c"
+    if (Test-Path $legacyPath) {
+        Remove-Item -LiteralPath $legacyPath -Force
+    }
+}
+
 $skills = @("dw-today.md", "dw-import.md")
 foreach ($s in $skills) {
     Copy-Item (Join-Path $RepoDir "skills\$s") (Join-Path $TargetDir ".claude\skills\$s") -Force
+}
+
+$commands = @("dw-today.md", "dw-import.md")
+foreach ($c in $commands) {
+    Copy-Item (Join-Path $RepoDir ".claude\commands\$c") (Join-Path $TargetDir ".claude\commands\$c") -Force
 }
 
 # --- Copy config files (working copies only, no .example duplicates) ---
