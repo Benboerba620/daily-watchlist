@@ -58,6 +58,8 @@ jobs:
             config/daily-watchlist.yaml \
             config/daily-watchlist.env \
             config/daily-watchlist-watchlist.md \
+            .claude/commands/dw-today.md \
+            .claude/commands/dw-import.md \
             .claude/skills/dw-today.md \
             .claude/skills/dw-import.md \
             CLAUDE.md \
@@ -77,6 +79,7 @@ jobs:
           test -f "$claude_file"
           grep -q "/dw-today" "$claude_file"
           grep -q "/dw-import" "$claude_file"
+          grep -q "./.claude/commands/dw-today.md" "$claude_file"
           grep -q "./.claude/skills/dw-today.md" "$claude_file"
           if grep -q "_daily-watchlist-protocols.md" "$claude_file"; then
             echo "Legacy protocol file reference leaked back into CLAUDE.md."
