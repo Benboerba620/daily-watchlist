@@ -29,7 +29,8 @@ DEFAULT_THRESHOLDS = {
     "large_cap_move": 3.0,
     "small_cap_move": 7.0,
 }
-WATCHLIST_COLUMNS = ("ticker", "name", "market", "market cap", "category")
+REQUIRED_WATCHLIST_COLUMNS = ("ticker", "name", "market", "market cap", "category")
+OPTIONAL_WATCHLIST_COLUMNS = ("tier", "hypothesis", "notes")
 CN_SUFFIXES = (".SH", ".SZ")
 HK_SUFFIX = ".HK"
 YFINANCE_IMPORT_WARNING_LOCK = Lock()
@@ -107,7 +108,7 @@ def parse_watchlist(watchlist_path: Path) -> list[dict[str, str]]:
 
             normalized = [normalize_header(cell) for cell in cells]
             if headers is None:
-                if tuple(normalized) == WATCHLIST_COLUMNS:
+                if all(column in normalized for column in REQUIRED_WATCHLIST_COLUMNS):
                     headers = list(normalized)
                 continue
 
@@ -132,6 +133,9 @@ def parse_watchlist(watchlist_path: Path) -> list[dict[str, str]]:
                     "market": row["market"].strip(),
                     "market_cap": row["market cap"].strip(),
                     "category": row["category"].strip(),
+                    "tier": row.get("tier", "").strip().upper(),
+                    "hypothesis": row.get("hypothesis", "").strip(),
+                    "notes": row.get("notes", "").strip(),
                 }
             )
 
@@ -500,6 +504,9 @@ def build_quote_record(
         "market": watchlist_entry["market"],
         "marketCapCategory": watchlist_entry["market_cap"],
         "category": watchlist_entry["category"],
+        "tier": watchlist_entry.get("tier", ""),
+        "hypothesis": watchlist_entry.get("hypothesis", ""),
+        "notes": watchlist_entry.get("notes", ""),
         "price": parse_float(raw_quote.get("price")),
         "change": parse_float(raw_quote.get("change")),
         "changesPercentage": parse_float(raw_quote.get("changesPercentage")),

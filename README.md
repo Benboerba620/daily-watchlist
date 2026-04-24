@@ -396,6 +396,8 @@ MIT
 | 🛠️ **Want to do every step by hand** | [Advanced: manual install](#advanced-manual-install-5-min) |
 
 ## Recent Updates
+- `v1.1.0` (2026-04-24): optional `Tier` / `Hypothesis` / `Notes` watchlist columns and read-only hypothesis-linked monitoring; no holdings tracking.
+
 
 - `2026-04-17`: README restructure (AI agent install promoted to primary path), installer now appends a routing pointer to the project-root CLAUDE.md, `--profile` mode routes A-shares/HK to Tushare (FMP coverage of `.SH/.SZ` is incomplete), smoke report dedup
 - `v1.0.2` (2026-04-16): Added Stooq / Finnhub / EOD / yfinance quote fallbacks, documented data-source tradeoffs in README, and added optional env knobs

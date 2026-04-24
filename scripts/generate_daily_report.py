@@ -273,6 +273,38 @@ def render_themes(config: dict[str, Any], enabled: bool) -> str:
     return "\n".join(blocks).rstrip()
 
 
+def render_hypothesis_watchlist(quotes: list[dict[str, Any]]) -> str:
+    rows = [
+        "| Tier | Hypothesis | Ticker | Name | Change | Notes |",
+        "|------|------------|--------|------|--------|-------|",
+    ]
+    linked = [
+        item
+        for item in quotes
+        if str(item.get("hypothesis") or "").strip()
+        or str(item.get("tier") or "").strip()
+    ]
+    tier_order = {"HOT": 0, "WARM": 1, "COLD": 2}
+    linked.sort(
+        key=lambda item: (
+            tier_order.get(str(item.get("tier") or "").upper(), 9),
+            str(item.get("hypothesis") or ""),
+            str(item.get("ticker") or ""),
+        )
+    )
+    if not linked:
+        rows.append("| N/A | N/A | N/A | N/A | N/A | Add optional `tier` / `hypothesis` columns to the watchlist to enable this section. |")
+        return "\n".join(rows)
+
+    for item in linked[:20]:
+        rows.append(
+            f"| {item.get('tier') or 'N/A'} | {item.get('hypothesis') or 'N/A'} | "
+            f"{item.get('ticker') or 'N/A'} | {item.get('name') or 'N/A'} | "
+            f"{format_pct(item.get('changesPercentage'))} | {item.get('notes') or ''} |"
+        )
+    return "\n".join(rows)
+
+
 def render_sources(modules: dict[str, bool]) -> str:
     lines = ["- `fetch_market_data.py`：实时拉取监控池行情、异动和财报"]
     if modules["macro"]:
@@ -331,6 +363,7 @@ def build_report(
         EARNINGS_REPORTED_TABLE=earnings_reported,
         EARNINGS_UPCOMING_TABLE=earnings_upcoming,
         THEMES_SECTION=render_themes(config, modules["focus_areas"]),
+        HYPOTHESIS_WATCHLIST_TABLE=render_hypothesis_watchlist(quotes),
         SOURCES_SECTION=render_sources(modules),
     )
     rendered = template_text.format_map(context).rstrip() + "\n"

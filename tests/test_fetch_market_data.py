@@ -18,6 +18,43 @@ class FetchMarketDataFallbackTests(unittest.TestCase):
     def setUp(self) -> None:
         fmd._YFINANCE_IMPORT_WARNING_EMITTED = False
 
+
+    def test_parse_watchlist_keeps_optional_thesis_columns(self) -> None:
+        watchlist_path = REPO_ROOT / "_tmp_watchlist_test.md"
+        watchlist_path.write_text(
+            "| Ticker | Name | Market | Market Cap | Category | Tier | Hypothesis | Notes |\n"
+            "|------|------|------|----------|------|------|------------|-------|\n"
+            "| NVDA | NVIDIA | US | Large | Technology | HOT | H1 | GPU bellwether |\n",
+            encoding="utf-8",
+        )
+        try:
+            entries = fmd.parse_watchlist(watchlist_path)
+        finally:
+            watchlist_path.unlink(missing_ok=True)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["ticker"], "NVDA")
+        self.assertEqual(entries[0]["tier"], "HOT")
+        self.assertEqual(entries[0]["hypothesis"], "H1")
+        self.assertEqual(entries[0]["notes"], "GPU bellwether")
+
+    def test_parse_watchlist_accepts_legacy_five_columns(self) -> None:
+        watchlist_path = REPO_ROOT / "_tmp_watchlist_legacy_test.md"
+        watchlist_path.write_text(
+            "| Ticker | Name | Market | Market Cap | Category |\n"
+            "|------|------|------|----------|------|\n"
+            "| AAPL | Apple | US | Large | Technology |\n",
+            encoding="utf-8",
+        )
+        try:
+            entries = fmd.parse_watchlist(watchlist_path)
+        finally:
+            watchlist_path.unlink(missing_ok=True)
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["tier"], "")
+        self.assertEqual(entries[0]["hypothesis"], "")
+
     def test_fetch_stooq_quote_parses_csv(self) -> None:
         response = mock.Mock()
         response.raise_for_status.return_value = None

@@ -18,6 +18,9 @@
 一次性读取以下文件：
 - `config/daily-watchlist.yaml` → 解析 modules、thresholds、focus_areas、**reporting** 配置
 - `config/daily-watchlist-watchlist.md`
+  - Required columns: `Ticker`, `Name`, `Market`, `Market Cap`, `Category`
+  - Optional columns: `Tier`, `Hypothesis`, `Notes` for read-only hypothesis-linked monitoring
+  - Do not read or write portfolio/holdings files in Daily Watchlist
 - `templates/daily-watchlist-report-template.md`
 
 **关键检查**：读取 `reporting` 段，记住以下两个值（后续步骤依赖）：

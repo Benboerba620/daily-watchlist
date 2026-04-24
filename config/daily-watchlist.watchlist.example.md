@@ -1,41 +1,28 @@
-# 每日监控池
+# Daily Watchlist Example
 
-## 科技
-| 代码 | 名称 | 市场 | 市值级别 | 分类 |
-|------|------|------|----------|------|
-| AAPL | 苹果 | 美股 | 大型 | 科技 |
-| MSFT | 微软 | 美股 | 大型 | 科技 |
-| NVDA | 英伟达 | 美股 | 大型 | 科技 |
-| GOOGL | Alphabet | 美股 | 大型 | 科技 |
+The first five columns are required. `Tier`, `Hypothesis`, and `Notes` are optional.
+Use `HOT` / `WARM` / `COLD` to control monitoring depth. This links tickers to theses but does not track positions or holdings.
 
-## 医疗健康
-| 代码 | 名称 | 市场 | 市值级别 | 分类 |
-|------|------|------|----------|------|
-| UNH | 联合健康 | 美股 | 大型 | 医疗健康 |
-| JNJ | 强生 | 美股 | 大型 | 医疗健康 |
-| LLY | 礼来 | 美股 | 大型 | 医疗健康 |
-| ABBV | 艾伯维 | 美股 | 大型 | 医疗健康 |
+## Technology
+| Ticker | Name | Market | Market Cap | Category | Tier | Hypothesis | Notes |
+|------|------|------|----------|------|------|------------|-------|
+| AAPL | Apple | US | Large | Technology | WARM | H1 | AI device cycle / services |
+| MSFT | Microsoft | US | Large | Technology | HOT | H1 | Cloud + AI infrastructure |
+| NVDA | NVIDIA | US | Large | Technology | HOT | H1 | GPU supply chain bellwether |
+| GOOGL | Alphabet | US | Large | Technology | WARM | H1 | AI search and cloud |
 
-## 能源
-| 代码 | 名称 | 市场 | 市值级别 | 分类 |
-|------|------|------|----------|------|
-| XOM | 埃克森美孚 | 美股 | 大型 | 能源 |
-| CVX | 雪佛龙 | 美股 | 大型 | 能源 |
-| COP | 康菲石油 | 美股 | 大型 | 能源 |
-| SLB | 斯伦贝谢 | 美股 | 大型 | 能源 |
+## Healthcare
+| Ticker | Name | Market | Market Cap | Category | Tier | Hypothesis | Notes |
+|------|------|------|----------|------|------|------------|-------|
+| UNH | UnitedHealth | US | Large | Healthcare | COLD |  | Defensive healthcare monitor |
+| JNJ | Johnson & Johnson | US | Large | Healthcare | COLD |  | Defensive healthcare monitor |
+| LLY | Eli Lilly | US | Large | Healthcare | WARM | H2 | GLP-1 demand |
+| ABBV | AbbVie | US | Large | Healthcare | COLD |  | Pipeline monitor |
 
-## 金融
-| 代码 | 名称 | 市场 | 市值级别 | 分类 |
-|------|------|------|----------|------|
-| JPM | 摩根大通 | 美股 | 大型 | 金融 |
-| BAC | 美国银行 | 美股 | 大型 | 金融 |
-| GS | 高盛 | 美股 | 大型 | 金融 |
-| BRK-B | 伯克希尔哈撒韦 | 美股 | 大型 | 金融 |
-
-## 消费
-| 代码 | 名称 | 市场 | 市值级别 | 分类 |
-|------|------|------|----------|------|
-| AMZN | 亚马逊 | 美股 | 大型 | 消费 |
-| TSLA | 特斯拉 | 美股 | 大型 | 消费 |
-| HD | 家得宝 | 美股 | 大型 | 消费 |
-| COST | 好市多 | 美股 | 大型 | 消费 |
+## Energy
+| Ticker | Name | Market | Market Cap | Category | Tier | Hypothesis | Notes |
+|------|------|------|----------|------|------|------------|-------|
+| XOM | Exxon Mobil | US | Large | Energy | WARM | H3 | Oil cycle monitor |
+| CVX | Chevron | US | Large | Energy | WARM | H3 | Oil cycle monitor |
+| COP | ConocoPhillips | US | Large | Energy | COLD |  | Energy benchmark |
+| SLB | SLB | US | Large | Energy | WARM | H3 | Oil service cycle |

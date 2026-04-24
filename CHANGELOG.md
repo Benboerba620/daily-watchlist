@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-24
+
+### Added
+- Watchlist rows can now include optional `Tier`, `Hypothesis`, and `Notes` columns.
+- Daily reports include a hypothesis-linked monitoring section for HOT/WARM/COLD watchlist review.
+
+### Changed
+- The hypothesis link is intentionally read-only: Daily Watchlist does not create, edit, or track positions/holdings.
+
+
+
 ### 修复
 
 - **Skill 文件重命名**：`skills/daily-watchlist-today.md` → `skills/dw-today.md`，`skills/daily-watchlist-import.md` → `skills/dw-import.md`。Claude Code 的 skill 触发名等于文件名（去掉 `.md`），原文件名只能触发 `/daily-watchlist-today`，README/CLAUDE.md 却全篇推 `/dw-today`——实际根本不存在。重命名后文件名与触发词对齐
