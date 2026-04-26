@@ -3,11 +3,21 @@
 [![Release](https://img.shields.io/github/v/release/Benboerba620/daily-watchlist?sort=semver)](https://github.com/Benboerba620/daily-watchlist/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> 🔗 **"零代码 AI 投研三件套" 之一** ｜ Part of the zero-code AI investment research toolkit
-> [知识库底座 karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) · 日常盯盘 daily-watchlist · [假设追踪 hypothesis-tracker](https://github.com/Benboerba620/hypothesis-tracker)
+> 📊 **30 秒看懂 / In 30 seconds**：你列一份股票池，说一句 `/dw-today`，Claude Code 自动抓价、搜新闻、查财报、写结构化日报。
+> Maintain a watchlist; Claude Code fetches prices, scans news, tracks earnings, and writes a structured daily report.
 
-> AI stock watchlist, portfolio monitoring, earnings tracking, and daily market report workflow for Claude Code.
-> 面向 Claude Code 的 AI 股票池监控、异动跟踪、财报日历与每日研究日报工作流。
+> 🔗 **零代码 AI 投研四件套** ｜ Zero-code AI investment research toolkit
+> 🎙️ [pod2wiki](https://github.com/Benboerba620/pod2wiki) 输入 · 🧠 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) 底座 · **📊 daily-watchlist 日常** · 🎯 [hypothesis-tracker](https://github.com/Benboerba620/hypothesis-tracker) 决策
+
+```mermaid
+flowchart LR
+    P[🎙️ pod2wiki] -->|sources| W[🧠 karpathy-claude-wiki]
+    W -.->|read| D[📊 daily-watchlist]
+    W -.->|read| H[🎯 hypothesis-tracker]
+    D --> H
+    H -.->|evidence| W
+    style D fill:#fde68a,stroke:#92400e
+```
 
 [Latest Release](https://github.com/Benboerba620/daily-watchlist/releases) | [All Releases](https://github.com/Benboerba620/daily-watchlist/releases) | [Changelog](./CHANGELOG.md)
 [中文](#中文) | [English](#english)
