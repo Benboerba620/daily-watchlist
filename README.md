@@ -38,6 +38,7 @@
 
 ## 最近更新
 
+- `Unreleased`：内置 Hypothesis Tracker，新增 `/ht-new`、`/ht-status`、`/ht-trade`，日报可扫描 `hypothesis/H*.md` 并把本地可确认信号回写为证据；交易记录写入 `portfolio/trades.csv`，并维护本地 `portfolio/holdings.csv`
 - `2026-04-17`：README 结构重排（AI agent 安装升为首推），install 脚本现在会给根 CLAUDE.md 追加路由段，`--profile` 模式下 A 股/港股强制走 Tushare（FMP 对 `.SH/.SZ` 覆盖不全），smoke 报告去重
 - `v1.0.2`（2026-04-16）：新增 Stooq / Finnhub / EOD / yfinance 行情兜底链，README 增加数据源说明，`env.example` 增加可选配置
 - `v1.0.1`（2026-04-11）：简化安装后 `CLAUDE.md` 注入、修复 Windows 安装器退出码、新增跨平台 CI 和离线 smoke 测试
@@ -48,7 +49,7 @@
 
 ## 这是什么？
 
-一个在 Claude Code 中运行的 **daily stock watchlist monitor / 每日股票池监控工具**。你维护一个股票池，每天说一句 `/dw-today`，它就会：
+一个在 Claude Code 中运行的 **daily stock watchlist monitor / 每日股票池监控工具**，现在也内置了 Hypothesis Tracker 作为假设与证据层。你维护一个股票池，每天说一句 `/dw-today`，它就会：
 
 1. 拉取你股票池里所有股票的最新行情
 2. 检测异动（大盘股 ±3%，小盘股 ±7%，阈值可配）
@@ -56,7 +57,16 @@
 4. 检查本周财报日历
 5. 按你关注的投资方向搜索行业新闻
 6. 生成一份结构化的 markdown 日报
-7. （可选）自动归档到 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
+7. 扫描本地 `hypothesis/H*.md`，把日报信号和投资假设关联起来
+8. （可选）自动归档到 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki)
+
+内置命令：
+
+- `/dw-today`：生成今日监控日报
+- `/dw-import`：导入或整理股票池
+- `/ht-new`：新建投资假设
+- `/ht-status`：查看假设状态、证据新鲜度和回顾提醒
+- `/ht-trade`：记录交易、更新本地 `portfolio/holdings.csv`，并回写到相关假设
 
 ```
 watchlist.md ──→ fetch_market_data.py ──→ JSON ──┐

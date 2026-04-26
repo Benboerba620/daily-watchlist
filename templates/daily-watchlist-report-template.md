@@ -32,8 +32,12 @@
 
 {THEMES_SECTION}
 
+## 假设联动
+
+{HYPOTHESIS_SECTION}
+
 ## 信息来源
 
 {SOURCES_SECTION}
 
-说明：这是安装器和协议默认使用的日报模板，用户可以随时自行编辑。
+说明：本模板先由本地脚本生成结构化骨架，新闻与因果分析需要由 Claude Code 结合 WebSearch 补充。

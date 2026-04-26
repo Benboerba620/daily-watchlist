@@ -54,14 +54,30 @@ jobs:
             scripts/fetch_macro_data.py \
             scripts/check_setup.py \
             scripts/workspace_paths.py \
+            scripts/sync_hypothesis.py \
+            scripts/trade_stats.py \
             templates/daily-watchlist-report-template.md \
+            templates/hypothesis-tracker-hypothesis-template.md \
+            templates/hypothesis-tracker-journal-template.md \
+            templates/hypothesis-tracker-report-template.md \
             config/daily-watchlist.yaml \
             config/daily-watchlist.env \
             config/daily-watchlist-watchlist.md \
+            config/hypothesis-tracker.yaml \
+            config/hypothesis-tracker.rules.md \
+            config/hypothesis-tracker.env \
+            portfolio/trades.csv \
+            portfolio/holdings.csv \
             .claude/commands/dw-today.md \
             .claude/commands/dw-import.md \
+            .claude/commands/ht-new.md \
+            .claude/commands/ht-status.md \
+            .claude/commands/ht-trade.md \
             .claude/skills/dw-today.md \
             .claude/skills/dw-import.md \
+            .claude/skills/ht-new.md \
+            .claude/skills/ht-status.md \
+            .claude/skills/ht-trade.md \
             CLAUDE.md \
           ; do
             if [ ! -f "./test-install/$f" ]; then
@@ -79,14 +95,19 @@ jobs:
           test -f "$claude_file"
           grep -q "/dw-today" "$claude_file"
           grep -q "/dw-import" "$claude_file"
+          grep -q "/ht-new" "$claude_file"
+          grep -q "/ht-status" "$claude_file"
+          grep -q "/ht-trade" "$claude_file"
           grep -q "./.claude/commands/dw-today.md" "$claude_file"
+          grep -q "./.claude/commands/ht-new.md" "$claude_file"
           grep -q "./.claude/skills/dw-today.md" "$claude_file"
+          grep -q "./.claude/skills/ht-new.md" "$claude_file"
           if grep -q "_daily-watchlist-protocols.md" "$claude_file"; then
             echo "Legacy protocol file reference leaked back into CLAUDE.md."
             exit 1
           fi
           line_count="$(wc -l < "$claude_file")"
-          test "$line_count" -le 20
+          test "$line_count" -le 32
 
       - name: Verify no redundant files
         shell: bash
@@ -98,6 +119,9 @@ jobs:
             config/daily-watchlist.env.example \
             config/daily-watchlist.example.yaml \
             config/daily-watchlist.watchlist.example.md \
+            config/hypothesis-tracker.example.yaml \
+            config/hypothesis-tracker.rules.example.md \
+            config/hypothesis-tracker.env.example \
             _daily-watchlist-protocols.md \
           ; do
             if [ -f "./test-install/$f" ]; then

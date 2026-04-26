@@ -77,6 +77,8 @@ def main() -> int:
         template_text,
         build_stub_market_data(),
         build_stub_macro_data(),
+        [],
+        [],
     )
     print(report_path)
     return 0

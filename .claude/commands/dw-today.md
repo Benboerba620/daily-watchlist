@@ -12,6 +12,8 @@ description: 生成 Daily Watchlist 今日简报
 - `config/daily-watchlist.yaml`
 - `config/daily-watchlist-watchlist.md`
 - `templates/daily-watchlist-report-template.md`
+- `config/hypothesis-tracker.yaml`（如存在）
+- `hypothesis/H*.md`（如存在）
 
 重点读取 `reporting` 段：
 - `reporting.model_profile`
@@ -28,6 +30,7 @@ python scripts/generate_daily_report.py
 ```
 
 执行后会在 `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md` 生成一份日报骨架。读取该文件，后续所有补充都基于这份新生成的日报进行。
+如果存在 `hypothesis/H*.md`，脚本会同时生成“假设联动”区，并把本地可确认的异动/财报信号回写为证据。
 
 ### Step 3: 补新闻与主题
 

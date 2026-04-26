@@ -4,7 +4,10 @@ from pathlib import Path
 
 CONFIG_DIRNAME = "config"
 REPORTS_DIRNAME = "daily-watchlist-reports"
-ROOT_INTEGRATION_HEADING = "## Daily Watchlist Protocols"
+HYPOTHESIS_DIRNAME = "hypothesis"
+PORTFOLIO_DIRNAME = "portfolio"
+JOURNAL_DIRNAME = "journal"
+ROOT_INTEGRATION_HEADING = "## Daily Watchlist"
 
 ENV_FILE_CANDIDATES = (
     "daily-watchlist.env",
@@ -26,11 +29,8 @@ TEMPLATE_FILE_CANDIDATES = (
     "report-template.md",
 )
 
-SKILL_FILE_CANDIDATES = (
-    "dw-today.md",
-    "dw-import.md",
-    "daily-watchlist-today.md",
-    "daily-watchlist-import.md",
+HYPOTHESIS_CONFIG_CANDIDATES = (
+    "hypothesis-tracker.yaml",
 )
 
 
@@ -53,7 +53,8 @@ def find_workspace_root(start_dir: Path) -> Path:
         if find_existing_path(config_dir, CONFIG_FILE_CANDIDATES):
             return candidate
     raise FileNotFoundError(
-        f"Could not locate workspace root from {start_dir} by searching for config files"
+        "Could not locate workspace root from "
+        f"{start_dir} by searching for config files"
     )
 
 
@@ -81,6 +82,31 @@ def resolve_env_path(config_dir: Path) -> Path:
 
 def resolve_template_path(workspace_root: Path) -> Path:
     templates_dir = workspace_root / "templates"
-    return find_existing_path(templates_dir, TEMPLATE_FILE_CANDIDATES) or preferred_path(
-        templates_dir, TEMPLATE_FILE_CANDIDATES
-    )
+    existing = find_existing_path(templates_dir, TEMPLATE_FILE_CANDIDATES)
+    return existing or preferred_path(templates_dir, TEMPLATE_FILE_CANDIDATES)
+
+
+def resolve_hypothesis_dir(workspace_root: Path) -> Path:
+    return workspace_root / HYPOTHESIS_DIRNAME
+
+
+def resolve_portfolio_dir(workspace_root: Path) -> Path:
+    return workspace_root / PORTFOLIO_DIRNAME
+
+
+def resolve_journal_dir(workspace_root: Path) -> Path:
+    return resolve_portfolio_dir(workspace_root) / JOURNAL_DIRNAME
+
+
+def resolve_trades_path(workspace_root: Path) -> Path:
+    return resolve_portfolio_dir(workspace_root) / "trades.csv"
+
+
+def resolve_holdings_path(workspace_root: Path) -> Path:
+    return resolve_portfolio_dir(workspace_root) / "holdings.csv"
+
+
+def resolve_hypothesis_config_path(config_dir: Path) -> Path:
+    return find_existing_path(
+        config_dir, HYPOTHESIS_CONFIG_CANDIDATES
+    ) or preferred_path(config_dir, HYPOTHESIS_CONFIG_CANDIDATES)

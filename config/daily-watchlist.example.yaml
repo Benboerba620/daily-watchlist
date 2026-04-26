@@ -19,6 +19,13 @@ thresholds:
   large_cap_move: 3
   small_cap_move: 7
 
+hypothesis_tracking:
+  enabled: true
+  directory: hypothesis
+  max_matches: 8
+  auto_writeback: true
+  suggest_new_hypothesis_threshold: 2
+
 focus_areas:
   - name: "AI 与数据中心"
     keywords: ["AI", "data center", "GPU", "inference", "LLM", "算力", "大模型"]

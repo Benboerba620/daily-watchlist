@@ -21,6 +21,8 @@
 7. 用户后续主要使用哪类模型？
    - 默认国际模型可保持 `default`
    - 如果是国产模型，建议设置 `reporting.model_profile: domestic` 和 `reporting.secondary_verify: true`
+8. 是否启用内置 Hypothesis Tracker？
+   - 默认启用；它记录假设、证据、交易决策，并维护本地 `portfolio/holdings.csv`
 
 ## 阶段 2：安装
 
@@ -49,12 +51,27 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 - `config/daily-watchlist.env` — 填入 API key
 - `config/daily-watchlist.yaml` — 模块开关、阈值、关注方向
 - `config/daily-watchlist-watchlist.md` — 股票池
+- `config/hypothesis-tracker.yaml` — 假设追踪配置
+- `config/hypothesis-tracker.rules.md` — 假设与交易证据规则
+- `portfolio/trades.csv` — 交易记录
+- `portfolio/holdings.csv` — 本地持仓辅助表
 
 安装器还会写入：
 
 - `.claude/skills/dw-today.md`
 - `.claude/skills/dw-import.md`
+- `.claude/skills/ht-new.md`
+- `.claude/skills/ht-status.md`
+- `.claude/skills/ht-trade.md`
+- `.claude/commands/dw-today.md`
+- `.claude/commands/dw-import.md`
+- `.claude/commands/ht-new.md`
+- `.claude/commands/ht-status.md`
+- `.claude/commands/ht-trade.md`
 - `templates/daily-watchlist-report-template.md`
+- `templates/hypothesis-tracker-hypothesis-template.md`
+- `templates/hypothesis-tracker-journal-template.md`
+- `templates/hypothesis-tracker-report-template.md`
 
 其中模板文件是默认输出格式。要明确告诉用户：之后可以随时自行编辑。
 
@@ -72,7 +89,7 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 - 如果已有 `CLAUDE.md`，在末尾追加入口段（不重复追加）
 
 入口段指向 skills 文件和配置文件，不拷贝完整协议。除非用户明确要求，否则不要把完整协议塞进根 `CLAUDE.md`。
-入口段里优先推荐 `/dw-today` 和 `/dw-import`，不要把 `/today`、`/import` 这种高冲突短别名当默认入口。
+入口段里优先推荐 `/dw-today`、`/dw-import`、`/ht-new`、`/ht-status` 和 `/ht-trade`，不要把 `/today`、`/import` 这种高冲突短别名当默认入口。
 
 ## 阶段 5：验证
 
@@ -82,6 +99,7 @@ bash ./.daily-watchlist-tmp/scripts/install.sh --target-dir ./daily-watchlist
 python {workspace}/scripts/check_setup.py
 python {workspace}/scripts/fetch_market_data.py --profile AAPL,MSFT
 python {repo}/scripts/smoke_generate_report.py --workspace {workspace}
+python {workspace}/scripts/sync_hypothesis.py --json
 ```
 
 如果启用了宏观模块，再运行：
@@ -96,9 +114,10 @@ python {workspace}/scripts/fetch_macro_data.py
 
 - 安装到了哪个目录
 - 新建或修改了哪些文件
-- 推荐触发词是 `/dw-today` 和 `/dw-import`
+- 推荐触发词是 `/dw-today`、`/dw-import`、`/ht-new`、`/ht-status` 和 `/ht-trade`
 - `templates/daily-watchlist-report-template.md` 可以随时编辑
 - 报告默认保存在 `daily-watchlist-reports/YYYY-MM/`
+- 假设默认保存在 `hypothesis/`；交易记录默认写入 `portfolio/trades.csv`，持仓辅助表默认写入 `portfolio/holdings.csv`
 - 如果使用国产模型，建议开启二次验证并严格核对新闻事实
 
 然后清理临时 clone 目录。

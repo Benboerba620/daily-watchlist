@@ -70,6 +70,8 @@ mkdir -p \
     "$TARGET_DIR/scripts" \
     "$TARGET_DIR/templates" \
     "$TARGET_DIR/daily-watchlist-reports" \
+    "$TARGET_DIR/hypothesis" \
+    "$TARGET_DIR/portfolio/journal" \
     "$TARGET_DIR/.claude/commands" \
     "$TARGET_DIR/.claude/skills"
 
@@ -79,7 +81,12 @@ cp "$REPO_DIR/scripts/fetch_market_data.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/fetch_macro_data.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/check_setup.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/scripts/workspace_paths.py" "$TARGET_DIR/scripts/"
+cp "$REPO_DIR/scripts/sync_hypothesis.py" "$TARGET_DIR/scripts/"
+cp "$REPO_DIR/scripts/trade_stats.py" "$TARGET_DIR/scripts/"
 cp "$REPO_DIR/templates/daily-watchlist-report-template.md" "$TARGET_DIR/templates/"
+cp "$REPO_DIR/templates/hypothesis-tracker-hypothesis-template.md" "$TARGET_DIR/templates/"
+cp "$REPO_DIR/templates/hypothesis-tracker-journal-template.md" "$TARGET_DIR/templates/"
+cp "$REPO_DIR/templates/hypothesis-tracker-report-template.md" "$TARGET_DIR/templates/"
 # Remove legacy filenames from prior installs (pre-1.0.4 rename)
 rm -f "$TARGET_DIR/.claude/skills/daily-watchlist-today.md"
 rm -f "$TARGET_DIR/.claude/skills/daily-watchlist-import.md"
@@ -87,13 +94,29 @@ rm -f "$TARGET_DIR/.claude/commands/daily-watchlist-today.md"
 rm -f "$TARGET_DIR/.claude/commands/daily-watchlist-import.md"
 cp "$REPO_DIR/.claude/commands/dw-today.md" "$TARGET_DIR/.claude/commands/"
 cp "$REPO_DIR/.claude/commands/dw-import.md" "$TARGET_DIR/.claude/commands/"
+cp "$REPO_DIR/.claude/commands/ht-new.md" "$TARGET_DIR/.claude/commands/"
+cp "$REPO_DIR/.claude/commands/ht-status.md" "$TARGET_DIR/.claude/commands/"
+cp "$REPO_DIR/.claude/commands/ht-trade.md" "$TARGET_DIR/.claude/commands/"
 cp "$REPO_DIR/skills/dw-today.md" "$TARGET_DIR/.claude/skills/"
 cp "$REPO_DIR/skills/dw-import.md" "$TARGET_DIR/.claude/skills/"
+cp "$REPO_DIR/skills/ht-new.md" "$TARGET_DIR/.claude/skills/"
+cp "$REPO_DIR/skills/ht-status.md" "$TARGET_DIR/.claude/skills/"
+cp "$REPO_DIR/skills/ht-trade.md" "$TARGET_DIR/.claude/skills/"
 
 # --- Copy config files (working copies only, no .example duplicates) ---
 copy_if_needed "$REPO_DIR/config/daily-watchlist.env.example" "$TARGET_DIR/config/daily-watchlist.env"
 copy_if_needed "$REPO_DIR/config/daily-watchlist.example.yaml" "$TARGET_DIR/config/daily-watchlist.yaml"
 copy_if_needed "$REPO_DIR/config/daily-watchlist.watchlist.example.md" "$TARGET_DIR/config/daily-watchlist-watchlist.md"
+copy_if_needed "$REPO_DIR/config/hypothesis-tracker.example.yaml" "$TARGET_DIR/config/hypothesis-tracker.yaml"
+copy_if_needed "$REPO_DIR/config/hypothesis-tracker.rules.example.md" "$TARGET_DIR/config/hypothesis-tracker.rules.md"
+copy_if_needed "$REPO_DIR/config/hypothesis-tracker.env.example" "$TARGET_DIR/config/hypothesis-tracker.env"
+
+if [[ ! -e "$TARGET_DIR/portfolio/trades.csv" || "$FORCE" == true ]]; then
+    printf '%s\n' "date,ticker,market,action,shares,price,currency,reasoning,kill_thesis,outcome_note" > "$TARGET_DIR/portfolio/trades.csv"
+fi
+if [[ ! -e "$TARGET_DIR/portfolio/holdings.csv" || "$FORCE" == true ]]; then
+    printf '%s\n' "ticker,market,name,shares,avg_cost,currency,date_opened,hypothesis,stop_loss,status" > "$TARGET_DIR/portfolio/holdings.csv"
+fi
 
 # --- Workspace-level CLAUDE.md (always written inside $TARGET_DIR) ---
 PROTOCOL_HEADING="## Daily Watchlist"
@@ -106,17 +129,26 @@ if [[ ! -f "$TARGET_DIR/CLAUDE.md" ]]; then
 ## Daily Watchlist
 
 For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
+For Hypothesis Tracker requests, prefer `/ht-new`, `/ht-status`, and `/ht-trade`.
 
 Read these first:
 - `./.claude/commands/dw-today.md`
 - `./.claude/commands/dw-import.md`
+- `./.claude/commands/ht-new.md`
+- `./.claude/commands/ht-status.md`
+- `./.claude/commands/ht-trade.md`
 - `./.claude/skills/dw-today.md`
 - `./.claude/skills/dw-import.md`
+- `./.claude/skills/ht-new.md`
+- `./.claude/skills/ht-status.md`
+- `./.claude/skills/ht-trade.md`
 - `./config/daily-watchlist.yaml`
 - `./config/daily-watchlist-watchlist.md`
+- `./config/hypothesis-tracker.yaml`
+- `./config/hypothesis-tracker.rules.md`
 - `./templates/daily-watchlist-report-template.md`
 
-Write reports to `./daily-watchlist-reports/YYYY-MM/`.
+Write reports to `./daily-watchlist-reports/YYYY-MM/`. Keep hypotheses in `./hypothesis/`.
 EOF
 elif ! grep -Fq "$PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md" && ! grep -Fq "$LEGACY_PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md"; then
     cat >> "$TARGET_DIR/CLAUDE.md" <<'EOF'
@@ -124,17 +156,26 @@ elif ! grep -Fq "$PROTOCOL_HEADING" "$TARGET_DIR/CLAUDE.md" && ! grep -Fq "$LEGA
 ## Daily Watchlist
 
 For Daily Watchlist requests, prefer `/dw-today` and `/dw-import`.
+For Hypothesis Tracker requests, prefer `/ht-new`, `/ht-status`, and `/ht-trade`.
 
 Read these first:
 - `./.claude/commands/dw-today.md`
 - `./.claude/commands/dw-import.md`
+- `./.claude/commands/ht-new.md`
+- `./.claude/commands/ht-status.md`
+- `./.claude/commands/ht-trade.md`
 - `./.claude/skills/dw-today.md`
 - `./.claude/skills/dw-import.md`
+- `./.claude/skills/ht-new.md`
+- `./.claude/skills/ht-status.md`
+- `./.claude/skills/ht-trade.md`
 - `./config/daily-watchlist.yaml`
 - `./config/daily-watchlist-watchlist.md`
+- `./config/hypothesis-tracker.yaml`
+- `./config/hypothesis-tracker.rules.md`
 - `./templates/daily-watchlist-report-template.md`
 
-Write reports to `./daily-watchlist-reports/YYYY-MM/`.
+Write reports to `./daily-watchlist-reports/YYYY-MM/`. Keep hypotheses in `./hypothesis/`.
 EOF
 fi
 
@@ -152,18 +193,26 @@ if [[ -n "$ABS_TARGET" && "$ABS_TARGET" != "$CWD" && "${ABS_TARGET}/" == "${CWD}
 
 ## Daily Watchlist
 
-Installed under \`$REL_TARGET/\`. For Daily Watchlist requests, prefer /dw-today and /dw-import.
+Installed under \`$REL_TARGET/\`. Prefer /dw-today, /dw-import, /ht-new, /ht-status, and /ht-trade.
 
 Workspace-level instructions (read these first when handling /dw-*):
 - $REL_TARGET/CLAUDE.md
 - $REL_TARGET/.claude/commands/dw-today.md
 - $REL_TARGET/.claude/commands/dw-import.md
+- $REL_TARGET/.claude/commands/ht-new.md
+- $REL_TARGET/.claude/commands/ht-status.md
+- $REL_TARGET/.claude/commands/ht-trade.md
 - $REL_TARGET/.claude/skills/dw-today.md
 - $REL_TARGET/.claude/skills/dw-import.md
+- $REL_TARGET/.claude/skills/ht-new.md
+- $REL_TARGET/.claude/skills/ht-status.md
+- $REL_TARGET/.claude/skills/ht-trade.md
 - $REL_TARGET/config/daily-watchlist.yaml
 - $REL_TARGET/config/daily-watchlist-watchlist.md
+- $REL_TARGET/config/hypothesis-tracker.yaml
+- $REL_TARGET/config/hypothesis-tracker.rules.md
 
-Reports are written to $REL_TARGET/daily-watchlist-reports/YYYY-MM/.
+Reports are written to $REL_TARGET/daily-watchlist-reports/YYYY-MM/. Hypotheses live in $REL_TARGET/hypothesis/.
 EOF
             echo "OK Added Daily Watchlist pointer to project-root CLAUDE.md"
         fi
@@ -202,5 +251,6 @@ echo "Next steps:"
 echo "  1. Edit API key:     $TARGET_DIR/config/daily-watchlist.env"
 echo "  2. Review config:    $TARGET_DIR/config/daily-watchlist.yaml"
 echo "  3. Review watchlist: $TARGET_DIR/config/daily-watchlist-watchlist.md"
-echo "  4. Edit template:    $TARGET_DIR/templates/daily-watchlist-report-template.md (optional)"
+echo "  4. Review HT config: $TARGET_DIR/config/hypothesis-tracker.yaml"
 echo "  5. Generate report:  Run /dw-today in Claude Code"
+echo "  6. Track theses:     Run /ht-new or /ht-status in Claude Code"

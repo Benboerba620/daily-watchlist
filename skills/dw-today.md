@@ -21,6 +21,8 @@
   - Required columns: `Ticker`, `Name`, `Market`, `Market Cap`, `Category`
   - Optional columns: `Tier`, `Hypothesis`, `Notes` for read-only hypothesis-linked monitoring
   - Do not read or write portfolio/holdings files in Daily Watchlist
+- `config/hypothesis-tracker.yaml`（如存在）→ 读取假设目录和回写策略
+- `hypothesis/H*.md`（如存在）→ 用于日报的假设联动区
 - `templates/daily-watchlist-report-template.md`
 
 **关键检查**：读取 `reporting` 段，记住以下两个值（后续步骤依赖）：
@@ -39,7 +41,8 @@ python {workspace}/scripts/generate_daily_report.py
 该脚本会：
 1. 调用 `fetch_market_data.py` + `fetch_macro_data.py`
 2. 生成骨架报告到 `daily-watchlist-reports/YYYY-MM/YYYY-MM-DD.md`
-3. 骨架中的"待补充"占位文字需要在后续步骤中替换
+3. 扫描 `hypothesis/H*.md`，生成假设联动区，并可把本地可确认信号回写成证据
+4. 骨架中的"待补充"占位文字需要在后续步骤中替换
 
 读取生成的骨架报告。
 

@@ -6,6 +6,16 @@ config/daily-watchlist.env
 reports/
 daily-watchlist-reports/
 
+# Hypothesis Tracker workspace data (user content)
+config/hypothesis-tracker.env
+config/hypothesis-tracker.yaml
+config/hypothesis-tracker.rules.md
+hypothesis/*
+!hypothesis/.gitkeep
+portfolio/*.csv
+portfolio/journal/*
+!portfolio/journal/.gitkeep
+
 # Python
 __pycache__/
 scripts/__pycache__/

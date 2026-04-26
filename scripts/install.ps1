@@ -19,17 +19,26 @@ $ProtocolLines = @(
     "## Daily Watchlist",
     "",
     "For Daily Watchlist requests, prefer /dw-today and /dw-import.",
+    "For Hypothesis Tracker requests, prefer /ht-new, /ht-status, and /ht-trade.",
     "",
     "Read these first:",
     "- ./.claude/commands/dw-today.md",
     "- ./.claude/commands/dw-import.md",
+    "- ./.claude/commands/ht-new.md",
+    "- ./.claude/commands/ht-status.md",
+    "- ./.claude/commands/ht-trade.md",
     "- ./.claude/skills/dw-today.md",
     "- ./.claude/skills/dw-import.md",
+    "- ./.claude/skills/ht-new.md",
+    "- ./.claude/skills/ht-status.md",
+    "- ./.claude/skills/ht-trade.md",
     "- ./config/daily-watchlist.yaml",
     "- ./config/daily-watchlist-watchlist.md",
+    "- ./config/hypothesis-tracker.yaml",
+    "- ./config/hypothesis-tracker.rules.md",
     "- ./templates/daily-watchlist-report-template.md",
     "",
-    "Write reports to ./daily-watchlist-reports/YYYY-MM/."
+    "Write reports to ./daily-watchlist-reports/YYYY-MM/. Keep hypotheses in ./hypothesis/."
 )
 $RootClaudeLines = @(
     "# Workspace Instructions",
@@ -41,18 +50,26 @@ function Get-RootPointerLines {
     return @(
         "## Daily Watchlist",
         "",
-        "Installed under ``$RelTarget/``. For Daily Watchlist requests, prefer /dw-today and /dw-import.",
+        "Installed under ``$RelTarget/``. Prefer /dw-today, /dw-import, /ht-new, /ht-status, and /ht-trade.",
         "",
         "Workspace-level instructions (read these first when handling /dw-*):",
         "- $RelTarget/CLAUDE.md",
         "- $RelTarget/.claude/commands/dw-today.md",
         "- $RelTarget/.claude/commands/dw-import.md",
+        "- $RelTarget/.claude/commands/ht-new.md",
+        "- $RelTarget/.claude/commands/ht-status.md",
+        "- $RelTarget/.claude/commands/ht-trade.md",
         "- $RelTarget/.claude/skills/dw-today.md",
         "- $RelTarget/.claude/skills/dw-import.md",
+        "- $RelTarget/.claude/skills/ht-new.md",
+        "- $RelTarget/.claude/skills/ht-status.md",
+        "- $RelTarget/.claude/skills/ht-trade.md",
         "- $RelTarget/config/daily-watchlist.yaml",
         "- $RelTarget/config/daily-watchlist-watchlist.md",
+        "- $RelTarget/config/hypothesis-tracker.yaml",
+        "- $RelTarget/config/hypothesis-tracker.rules.md",
         "",
-        "Reports are written to $RelTarget/daily-watchlist-reports/YYYY-MM/."
+        "Reports are written to $RelTarget/daily-watchlist-reports/YYYY-MM/. Hypotheses live in $RelTarget/hypothesis/."
     )
 }
 
@@ -106,6 +123,9 @@ $dirs = @(
     "scripts",
     "templates",
     "daily-watchlist-reports",
+    "hypothesis",
+    "portfolio",
+    "portfolio\journal",
     ".claude",
     ".claude\commands",
     ".claude\skills"
@@ -123,13 +143,18 @@ $scripts = @(
     "fetch_market_data.py",
     "fetch_macro_data.py",
     "check_setup.py",
-    "workspace_paths.py"
+    "workspace_paths.py",
+    "sync_hypothesis.py",
+    "trade_stats.py"
 )
 foreach ($s in $scripts) {
     Copy-Item (Join-Path $RepoDir "scripts\$s") (Join-Path $TargetDir "scripts\$s") -Force
 }
 
 Copy-Item (Join-Path $RepoDir "templates\daily-watchlist-report-template.md") (Join-Path $TargetDir "templates\daily-watchlist-report-template.md") -Force
+Copy-Item (Join-Path $RepoDir "templates\hypothesis-tracker-hypothesis-template.md") (Join-Path $TargetDir "templates\hypothesis-tracker-hypothesis-template.md") -Force
+Copy-Item (Join-Path $RepoDir "templates\hypothesis-tracker-journal-template.md") (Join-Path $TargetDir "templates\hypothesis-tracker-journal-template.md") -Force
+Copy-Item (Join-Path $RepoDir "templates\hypothesis-tracker-report-template.md") (Join-Path $TargetDir "templates\hypothesis-tracker-report-template.md") -Force
 
 # Remove legacy filenames from prior installs (pre-1.0.4 rename)
 $legacySkills = @("daily-watchlist-today.md", "daily-watchlist-import.md")
@@ -148,12 +173,12 @@ foreach ($c in $legacyCommands) {
     }
 }
 
-$skills = @("dw-today.md", "dw-import.md")
+$skills = @("dw-today.md", "dw-import.md", "ht-new.md", "ht-status.md", "ht-trade.md")
 foreach ($s in $skills) {
     Copy-Item (Join-Path $RepoDir "skills\$s") (Join-Path $TargetDir ".claude\skills\$s") -Force
 }
 
-$commands = @("dw-today.md", "dw-import.md")
+$commands = @("dw-today.md", "dw-import.md", "ht-new.md", "ht-status.md", "ht-trade.md")
 foreach ($c in $commands) {
     Copy-Item (Join-Path $RepoDir ".claude\commands\$c") (Join-Path $TargetDir ".claude\commands\$c") -Force
 }
@@ -162,6 +187,19 @@ foreach ($c in $commands) {
 Copy-IfNeeded (Join-Path $RepoDir "config\daily-watchlist.env.example") (Join-Path $TargetDir "config\daily-watchlist.env")
 Copy-IfNeeded (Join-Path $RepoDir "config\daily-watchlist.example.yaml") (Join-Path $TargetDir "config\daily-watchlist.yaml")
 Copy-IfNeeded (Join-Path $RepoDir "config\daily-watchlist.watchlist.example.md") (Join-Path $TargetDir "config\daily-watchlist-watchlist.md")
+Copy-IfNeeded (Join-Path $RepoDir "config\hypothesis-tracker.example.yaml") (Join-Path $TargetDir "config\hypothesis-tracker.yaml")
+Copy-IfNeeded (Join-Path $RepoDir "config\hypothesis-tracker.rules.example.md") (Join-Path $TargetDir "config\hypothesis-tracker.rules.md")
+Copy-IfNeeded (Join-Path $RepoDir "config\hypothesis-tracker.env.example") (Join-Path $TargetDir "config\hypothesis-tracker.env")
+
+$tradesFile = Join-Path $TargetDir "portfolio\trades.csv"
+if ((-not (Test-Path $tradesFile)) -or $Force) {
+    Set-Content -Path $tradesFile -Value "date,ticker,market,action,shares,price,currency,reasoning,kill_thesis,outcome_note" -Encoding utf8
+}
+
+$holdingsFile = Join-Path $TargetDir "portfolio\holdings.csv"
+if ((-not (Test-Path $holdingsFile)) -or $Force) {
+    Set-Content -Path $holdingsFile -Value "ticker,market,name,shares,avg_cost,currency,date_opened,hypothesis,stop_loss,status" -Encoding utf8
+}
 
 # --- Workspace-level CLAUDE.md (always written inside $TargetDir) ---
 $targetClaude = Join-Path $TargetDir "CLAUDE.md"
@@ -244,5 +282,6 @@ Write-Host "Next steps:"
 Write-Host "  1. Edit API key:     $TargetDir\config\daily-watchlist.env"
 Write-Host "  2. Review config:    $TargetDir\config\daily-watchlist.yaml"
 Write-Host "  3. Review watchlist: $TargetDir\config\daily-watchlist-watchlist.md"
-Write-Host "  4. Edit template:    $TargetDir\templates\daily-watchlist-report-template.md (optional)"
+Write-Host "  4. Review HT config: $TargetDir\config\hypothesis-tracker.yaml"
 Write-Host "  5. Generate report:  Run /dw-today in Claude Code"
+Write-Host "  6. Track theses:     Run /ht-new or /ht-status in Claude Code"

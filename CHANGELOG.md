@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+- 内置 Hypothesis Tracker 模块：新增 `/ht-new`、`/ht-status`、`/ht-trade` 命令和对应 skills。
+- 新增 `hypothesis/`、`portfolio/trades.csv`、HT 配置、规则、模板和检查脚本。
+- 日报生成会扫描 `hypothesis/H*.md`，生成假设联动区，并可把本地可确认的异动/财报信号回写为证据。
+
+### Changed
+- 安装器现在一次性安装 Daily Watchlist + Hypothesis Tracker；HT 交易流程会写入 `portfolio/trades.csv` 并维护本地 `portfolio/holdings.csv`。
+
 ## [1.1.0] - 2026-04-24
 
 ### Added

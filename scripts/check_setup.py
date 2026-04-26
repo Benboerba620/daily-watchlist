@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Daily Watchlist - 环境检查
+Daily Watchlist + Hypothesis Tracker 环境检查。
 """
+
+from __future__ import annotations
 
 import os
 import sys
@@ -14,6 +16,11 @@ from workspace_paths import (
     WATCHLIST_FILE_CANDIDATES,
     resolve_config_path,
     resolve_env_path,
+    resolve_holdings_path,
+    resolve_hypothesis_config_path,
+    resolve_hypothesis_dir,
+    resolve_journal_dir,
+    resolve_trades_path,
     resolve_watchlist_path,
 )
 
@@ -27,14 +34,19 @@ FAIL = "[FAIL]"
 WARN = "[WARN]"
 
 
-def check(name, passed, msg=""):
+def check(name: str, passed: bool, msg: str = "") -> bool:
     status = OK if passed else FAIL
     detail = f" - {msg}" if msg else ""
     print(f"  {status} {name}{detail}")
     return passed
 
 
-def load_env_file(env_file):
+def warn(name: str, msg: str = "") -> None:
+    detail = f" - {msg}" if msg else ""
+    print(f"  {WARN} {name}{detail}")
+
+
+def load_env_file(env_file: Path) -> None:
     from dotenv import dotenv_values
 
     raw_text = env_file.read_text(encoding="utf-8-sig")
@@ -44,8 +56,8 @@ def load_env_file(env_file):
             os.environ[key] = value
 
 
-def main():
-    print("Daily Watchlist - 环境检查\n")
+def main() -> int:
+    print("Daily Watchlist + Hypothesis Tracker 环境检查\n")
     all_pass = True
 
     version = sys.version_info
@@ -58,10 +70,10 @@ def main():
     for pkg in ["requests", "dotenv", "yaml"]:
         try:
             __import__(pkg)
-            check(f"依赖包: {pkg}", True)
+            check(f"依赖包 {pkg}", True)
         except ImportError:
             real_name = {"dotenv": "python-dotenv", "yaml": "pyyaml"}.get(pkg, pkg)
-            all_pass &= check(f"依赖包: {pkg}", False, f"请执行 pip install {real_name}")
+            all_pass &= check(f"依赖包 {pkg}", False, f"请执行 pip install {real_name}")
 
     root = Path(__file__).resolve().parent.parent
     config_dir = root / "config"
@@ -73,7 +85,7 @@ def main():
         all_pass &= check(
             f"config/{ENV_FILE_CANDIDATES[0]}",
             False,
-            f"请创建 {ENV_FILE_CANDIDATES[0]} 或重新运行安装器，然后填入 API key",
+            f"请创建 {ENV_FILE_CANDIDATES[0]} 并填入 API Key",
         )
     else:
         check(f"config/{env_file.name}", True)
@@ -81,7 +93,9 @@ def main():
 
         fmp_key = os.getenv("FMP_API_KEY", "")
         if not fmp_key or fmp_key.startswith("your_"):
-            all_pass &= check("FMP_API_KEY", False, f"请在 config/{env_file.name} 中填写 FMP_API_KEY")
+            all_pass &= check(
+                "FMP_API_KEY", False, f"请在 config/{env_file.name} 中填写 FMP_API_KEY"
+            )
         else:
             try:
                 import requests
@@ -92,11 +106,14 @@ def main():
                 )
                 data = response.json()
                 if isinstance(data, list) and data and "symbol" in data[0]:
-                    check("FMP_API_KEY", True, f"可用（AAPL = ${data[0].get('price', '?')}）")
+                    price = data[0].get("price", "?")
+                    check("FMP_API_KEY", True, f"可用（AAPL = ${price}）")
                 else:
-                    all_pass &= check("FMP_API_KEY", False, f"返回异常: {str(data)[:100]}")
+                    all_pass &= check(
+                        "FMP_API_KEY", False, f"返回异常：{str(data)[:100]}"
+                    )
             except Exception as exc:  # noqa: BLE001
-                all_pass &= check("FMP_API_KEY", False, f"连接失败: {exc}")
+                all_pass &= check("FMP_API_KEY", False, f"连接失败：{exc}")
 
         ts_token = os.getenv("TUSHARE_TOKEN", "")
         if ts_token and not ts_token.startswith("your_"):
@@ -104,14 +121,16 @@ def main():
                 import tushare as ts
 
                 pro = ts.pro_api(ts_token)
-                pro.trade_cal(exchange="SSE", start_date="20260101", end_date="20260102")
+                pro.trade_cal(
+                    exchange="SSE", start_date="20260101", end_date="20260102"
+                )
                 check("TUSHARE_TOKEN", True, "可用")
             except ImportError:
-                print(f"  {WARN} 已设置 TUSHARE_TOKEN，但未安装 tushare（pip install tushare）")
+                warn("TUSHARE_TOKEN", "已配置，但未安装 tushare（pip install tushare）")
             except Exception as exc:  # noqa: BLE001
-                print(f"  {WARN} TUSHARE_TOKEN 检查跳过: {exc}")
+                warn("TUSHARE_TOKEN", f"检查跳过：{exc}")
         else:
-            print(f"  {WARN} 未设置 TUSHARE_TOKEN（可选，仅 A 股 / 港股需要）")
+            warn("TUSHARE_TOKEN", "未配置（可选，仅 A 股/港股需要）")
 
     config_file = resolve_config_path(config_dir)
     if config_file.exists():
@@ -120,7 +139,7 @@ def main():
         all_pass &= check(
             f"config/{CONFIG_FILE_CANDIDATES[0]}",
             False,
-            f"请创建 {CONFIG_FILE_CANDIDATES[0]} 或重新运行安装器",
+            f"请创建 {CONFIG_FILE_CANDIDATES[0]}",
         )
 
     watchlist_file = resolve_watchlist_path(config_dir)
@@ -133,15 +152,36 @@ def main():
             f"请创建 {WATCHLIST_FILE_CANDIDATES[0]} 或通过 /dw-import 生成",
         )
 
+    hypothesis_config = resolve_hypothesis_config_path(config_dir)
+    all_pass &= check(
+        "config/hypothesis-tracker.yaml",
+        hypothesis_config.exists(),
+        "内置假设跟踪配置缺失" if not hypothesis_config.exists() else "",
+    )
+
+    hypothesis_dir = resolve_hypothesis_dir(root)
+    all_pass &= check("hypothesis/", hypothesis_dir.exists())
+
+    journal_dir = resolve_journal_dir(root)
+    all_pass &= check("portfolio/journal/", journal_dir.exists())
+
+    trades_path = resolve_trades_path(root)
+    all_pass &= check("portfolio/trades.csv", trades_path.exists())
+
+    holdings_path = resolve_holdings_path(root)
+    all_pass &= check("portfolio/holdings.csv", holdings_path.exists())
+
     print()
     if all_pass:
-        print("所有必需检查均已通过。现在可以运行 /dw-today 生成第一份简报。")
-        sys.exit(0)
+        print(
+            "所有必要检查已通过。现在可以运行 "
+            "/dw-today、/ht-new、/ht-status、/ht-trade。"
+        )
+        return 0
 
-    print("存在未完成项。请按上面的提示修复后再运行。")
-    print(f"常见下一步：编辑 config/{ENV_FILE_CANDIDATES[0]} 填入 FMP_API_KEY，然后重新运行本检查。")
-    sys.exit(1)
+    print("仍有未完成项，请按上面的提示修复后再运行。")
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
