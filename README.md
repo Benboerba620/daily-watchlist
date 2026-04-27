@@ -6,16 +6,15 @@
 > 📊 **30 秒看懂 / In 30 seconds**：你列一份股票池，说一句 `/dw-today`，Claude Code 自动抓价、搜新闻、查财报、写结构化日报。
 > Maintain a watchlist; Claude Code fetches prices, scans news, tracks earnings, and writes a structured daily report.
 
-> 🔗 **零代码 AI 投研四件套** ｜ Zero-code AI investment research toolkit
-> 🎙️ [pod2wiki](https://github.com/Benboerba620/pod2wiki) 输入 · 🧠 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) 底座 · **📊 daily-watchlist 日常** · 🎯 [hypothesis-tracker](https://github.com/Benboerba620/hypothesis-tracker) 决策
+> 🔗 **零代码 AI 投研三件套** ｜ Zero-code AI investment research toolkit
+> 🎙️ [pod2wiki](https://github.com/Benboerba620/pod2wiki) 输入 · 🧠 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) 底座 · **📊 daily-watchlist 日常 + 内置假设追踪**
 
 ```mermaid
 flowchart LR
     P[🎙️ pod2wiki] -->|sources| W[🧠 karpathy-claude-wiki]
     W -.->|read| D[📊 daily-watchlist]
-    W -.->|read| H[🎯 hypothesis-tracker]
-    D --> H
-    H -.->|evidence| W
+    D -->|hypotheses & trades| DHT[🎯 built-in HT]
+    DHT -.->|evidence| W
     style D fill:#fde68a,stroke:#92400e
 ```
 
