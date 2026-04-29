@@ -43,3 +43,5 @@ Thumbs.db
 
 # Sync-drive conflict copies
 *_冲突文件_*
+*.baiduyun.uploading.cfg
+*.baiduyun.downloading.cfg

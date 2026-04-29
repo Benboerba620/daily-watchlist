@@ -6,6 +6,7 @@
 - 尽可能保持向后兼容
 - 文件命名优先使用命名空间前缀，避免通用名
 - 提交前跑 `python scripts/check_setup.py`
+- 发布或提交 PR 前跑 `python scripts/preflight_public_repo.py`，确认没有 API key、本机路径、同步盘冲突文件或用户报告被带进公开仓库
 - 涉及脚本改动的，在干净目录里做一次完整安装测试
 
 ## 欢迎的贡献

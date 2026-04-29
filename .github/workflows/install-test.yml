@@ -138,6 +138,9 @@ jobs:
           python -c "import dotenv; print('python-dotenv OK')"
           python -c "import yaml; print('pyyaml OK')"
 
+      - name: Public repo preflight
+        run: python scripts/preflight_public_repo.py
+
       - name: Run fallback unit tests
         run: |
           python -m unittest discover -s tests -p "test_*.py" -v
